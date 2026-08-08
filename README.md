@@ -87,6 +87,8 @@ zoe-ai-platform-v1/
 |---|---|
 | [Architecture Blueprint V1.0](docs/architecture/ZOE-BLUEPRINT-V1.0.md) | Full system architecture |
 | [Zoë Identity V1.0](docs/zoe/ZOE-IDENTITY-V1.0.md) | Zoë's versioned identity definition |
+| [Council of 33 V1.0](docs/council/COUNCIL-OF-33-V1.0.md) | All 33 Goddesses — profiles, permissions, tools |
+| [Goddess Interface V1.0](docs/council/GODDESS-INTERFACE-V1.0.md) | Technical interface contract for all Goddesses |
 | [Database Design V1.0](docs/database/DATABASE-DESIGN-V1.0.md) | Schema and event strategy |
 | [GitHub Project Plan](docs/github-project/GITHUB-PROJECT-PLAN.md) | Milestones, epics, and issue structure |
 
