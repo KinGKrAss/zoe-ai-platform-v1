@@ -92,6 +92,30 @@ zoe-ai-platform-v1/
 
 ---
 
+## Android App (apps/android)
+
+The Android client now includes a runnable Kotlin app shell for the Zoë Command Center with core module entry points:
+
+- Zoë Chat
+- Memory & Context
+- Tool Router
+- Reports
+
+Build and run locally:
+
+```bash
+cd apps/android
+./gradlew :app:assembleDebug
+```
+
+Run unit tests:
+
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+---
+
 ## Guiding Principles
 
 1. **Zoë is persistent** – her identity, memory, and knowledge are stored, versioned, and recoverable.

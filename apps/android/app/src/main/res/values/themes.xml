@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.Zoe" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">#4C4DDC</item>
+        <item name="colorOnPrimary">#FFFFFF</item>
+        <item name="colorSecondary">#8256FF</item>
+    </style>
+</resources>

@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Zoë Command Center</string>
+    <string name="subtitle">Android shell for ZOE-CORE modules</string>
+
+    <string name="module_chat_title">Zoë Chat</string>
+    <string name="module_chat_description">Conversational interface for task delegation, property analysis and quick status requests.</string>
+
+    <string name="module_memory_title">Memory &amp; Context</string>
+    <string name="module_memory_description">View and manage identity, long-term memory and recent conversation context.</string>
+
+    <string name="module_tools_title">Tool Router</string>
+    <string name="module_tools_description">Trigger approved READ/ANALYZE tools and inspect permission-gated operations.</string>
+
+    <string name="module_reports_title">Reports</string>
+    <string name="module_reports_description">Generate portfolio summaries and progress reports for the command center.</string>
+</resources>
