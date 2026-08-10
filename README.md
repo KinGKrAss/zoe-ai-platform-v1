@@ -94,12 +94,19 @@ zoe-ai-platform-v1/
 
 ## Android App (apps/android)
 
-The Android client now includes a runnable Kotlin app shell for the Zoë Command Center with core module entry points:
+The Android client now includes a runnable Kotlin MVP for the Zoë Command Center with interactive core modules:
 
 - Zoë Chat
 - Memory & Context
 - Tool Router
 - Reports
+
+Current MVP capabilities:
+
+- Tab-based module switching
+- In-app chat flow with local Zoë reply logic
+- Memory, tool, and report lists backed by app content models
+- Report generation placeholder action (ready for API integration)
 
 Build and run locally:
 

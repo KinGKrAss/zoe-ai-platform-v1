@@ -1,16 +1,26 @@
 <resources>
     <string name="app_name">Zoë Command Center</string>
-    <string name="subtitle">Android shell for ZOE-CORE modules</string>
+    <string name="subtitle">Android MVP für ZOE-CORE Arbeitsbereiche</string>
 
     <string name="module_chat_title">Zoë Chat</string>
-    <string name="module_chat_description">Conversational interface for task delegation, property analysis and quick status requests.</string>
+    <string name="module_chat_description">Interaktiver Chat für Aufgaben, Statusabfragen und schnelle Agenten-Requests.</string>
 
     <string name="module_memory_title">Memory &amp; Context</string>
-    <string name="module_memory_description">View and manage identity, long-term memory and recent conversation context.</string>
+    <string name="module_memory_description">Übersicht zu Identity, langfristiger Memory und Wissensobjekten.</string>
 
     <string name="module_tools_title">Tool Router</string>
-    <string name="module_tools_description">Trigger approved READ/ANALYZE tools and inspect permission-gated operations.</string>
+    <string name="module_tools_description">Freigegebene Tools mit Berechtigungsstufen READ, ANALYZE, WRITE und ADMIN.</string>
 
     <string name="module_reports_title">Reports</string>
-    <string name="module_reports_description">Generate portfolio summaries and progress reports for the command center.</string>
+    <string name="module_reports_description">Berichtsübersicht und Schnellaktion zum Generieren neuer Reports.</string>
+
+    <string name="chat_input_hint">Nachricht an Zoë…</string>
+    <string name="chat_send">Senden</string>
+
+    <string name="memory_header">Aktive Memory-Einträge</string>
+    <string name="tools_header">Verfügbare Tool-Aktionen</string>
+    <string name="reports_header">Report-Backlog</string>
+
+    <string name="generate_report_button">Report generieren</string>
+    <string name="report_generation_hint">Report-Erstellung ist als nächster API-Schritt vorbereitet.</string>
 </resources>
