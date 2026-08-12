@@ -94,9 +94,7 @@ class ArchiveStore:
                 INSERT INTO z1_archive_sources
                     (source_type, source_name, source_hash, source_version, metadata)
                 VALUES ('CHATGPT_EXPORT', %s, %s, %s, %s::jsonb)
-                ON CONFLICT (source_type, source_hash)
-                DO UPDATE SET source_name = EXCLUDED.source_name
-                RETURNING id
+                ON CONFLICT (source_type, source_hash) DO NOTHING
                 """,
                 (
                     source_path.name,
@@ -104,6 +102,13 @@ class ArchiveStore:
                     "chatgpt-conversations-json",
                     json.dumps({"item_count": len(items)}),
                 ),
+            )
+            cursor.execute(
+                """
+                SELECT id FROM z1_archive_sources
+                WHERE source_type = 'CHATGPT_EXPORT' AND source_hash = %s
+                """,
+                (source_hash,),
             )
             source_id = str(cursor.fetchone()[0])
 
@@ -116,7 +121,8 @@ class ArchiveStore:
                         (source_id, external_id, conversation_ref, message_ref, role,
                          content, content_hash, source_locator, created_at_source, metadata)
                     VALUES (%s, %s, %s, %s, %s, %s, %s, %s::jsonb,
-                            to_timestamp(%s), '{}'::jsonb)
+                            CASE WHEN %s IS NULL THEN NULL ELSE to_timestamp(%s::double precision) END,
+                            '{}'::jsonb)
                     ON CONFLICT DO NOTHING
                     """,
                     (
@@ -128,6 +134,7 @@ class ArchiveStore:
                         item["content"],
                         content_hash,
                         json.dumps(item["source_locator"]),
+                        item["created_at_source"],
                         item["created_at_source"],
                     ),
                 )
