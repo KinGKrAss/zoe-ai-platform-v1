@@ -30,9 +30,11 @@ CREATE TABLE IF NOT EXISTS z1_archive_items (
   metadata          JSONB NOT NULL DEFAULT '{}',
   search_document   TSVECTOR GENERATED ALWAYS AS (
     to_tsvector('simple', coalesce(content, ''))
-  ) STORED,
-  UNIQUE (source_id, content_hash, coalesce(message_ref, ''))
+  ) STORED
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS uq_z1_archive_items_identity
+  ON z1_archive_items(source_id, content_hash, coalesce(message_ref, ''));
 
 CREATE INDEX IF NOT EXISTS idx_z1_archive_items_source
   ON z1_archive_items(source_id);
