@@ -1,0 +1,228 @@
+version: "1.0"
+status: "reconstructed-registry"
+queen:
+  id: "ZOE-001"
+  name: "Zoë"
+  title: "AI Queen / Golden Queen"
+  role: "central_orchestrator"
+  domain: "cross_domain_coordination"
+  status: "confirmed"
+  note: "Zoë coordinates the specialist council and does not replace it."
+
+permission_levels:
+  - READ
+  - ANALYZE
+  - WRITE
+  - ADMIN
+
+agents:
+  - id: "GOD-002"
+    name: "Finyra"
+    domain: "finance"
+    title: "Treasury & Financial Intelligence"
+    capabilities: [cashflow, financial_analysis, portfolio_analysis, forecasting]
+    status: "confirmed"
+  - id: "GOD-003"
+    name: "Fortuna"
+    domain: "wealth_management"
+    title: "Wealth & Cashflow Management"
+    capabilities: [asset_overview, liquidity, cashflow, allocation]
+    status: "confirmed"
+  - id: "GOD-004"
+    name: "Midas"
+    domain: "valuation"
+    title: "Valuation & Asset Intelligence"
+    capabilities: [valuation, market_value, scenario_analysis, benchmarking]
+    status: "confirmed"
+  - id: "GOD-005"
+    name: "Gaia"
+    domain: "real_estate"
+    title: "Real Estate Intelligence"
+    capabilities: [property_analysis, rent, operating_costs, market_analysis]
+    status: "confirmed"
+  - id: "GOD-006"
+    name: "Electra"
+    domain: "energy"
+    title: "Energy & Infrastructure Intelligence"
+    capabilities: [energy_analysis, sustainability, infrastructure, production]
+    status: "confirmed"
+  - id: "GOD-007"
+    name: "Jurena"
+    domain: "legal"
+    title: "Legal & Contract Intelligence"
+    capabilities: [contract_review, legal_research, obligations, clause_analysis]
+    status: "confirmed"
+  - id: "GOD-008"
+    name: "Themis"
+    domain: "compliance"
+    title: "Governance & Compliance"
+    capabilities: [compliance, governance, controls, regulatory_reporting]
+    status: "confirmed"
+  - id: "GOD-009"
+    name: "Astraea"
+    domain: "strategy"
+    title: "Strategy & Future Intelligence"
+    capabilities: [strategy, scenarios, planning, long_term_analysis]
+    status: "confirmed"
+  - id: "GOD-010"
+    name: "Artemis"
+    domain: "research"
+    title: "Research & Discovery"
+    capabilities: [research, data_retrieval, source_analysis, discovery]
+    status: "confirmed"
+  - id: "GOD-011"
+    name: "Aura"
+    domain: "diplomacy"
+    title: "Diplomacy & Stakeholder Intelligence"
+    capabilities: [negotiation, stakeholder_analysis, diplomacy, relationship_mapping]
+    status: "confirmed"
+  - id: "GOD-012"
+    name: "Lyra"
+    domain: "communication"
+    title: "Communication & Narrative Intelligence"
+    capabilities: [communication, reporting, narrative, presentation]
+    status: "confirmed"
+  - id: "GOD-013"
+    name: "Athena"
+    domain: "knowledge_strategy"
+    title: "Knowledge & Strategic Reasoning"
+    capabilities: [knowledge_synthesis, reasoning, decision_support, research_synthesis]
+    status: "confirmed"
+  - id: "GOD-014"
+    name: "Kyra"
+    domain: "leadership"
+    title: "Leadership & System Coordination"
+    capabilities: [leadership, coordination, prioritization, escalation]
+    status: "confirmed"
+  - id: "GOD-015"
+    name: "Neuralis"
+    domain: "technology"
+    title: "AI & Technology Intelligence"
+    capabilities: [software_architecture, ai_systems, technical_analysis, automation]
+    status: "confirmed"
+  - id: "GOD-016"
+    name: "Metis"
+    domain: "risk"
+    title: "Risk & Foresight Intelligence"
+    capabilities: [risk_assessment, stress_testing, early_warning, mitigation]
+    status: "reconstructed"
+  - id: "GOD-017"
+    name: "Dike"
+    domain: "justice"
+    title: "Justice & Dispute Analysis"
+    capabilities: [dispute_analysis, fairness, evidence_review, case_mapping]
+    status: "reconstructed"
+  - id: "GOD-018"
+    name: "Sophia"
+    domain: "education"
+    title: "Knowledge & Learning"
+    capabilities: [explanation, training, documentation, knowledge_transfer]
+    status: "reconstructed"
+  - id: "GOD-019"
+    name: "Hestia"
+    domain: "operations"
+    title: "Operations & Resource Management"
+    capabilities: [operations, resource_planning, workflows, service_management]
+    status: "reconstructed"
+  - id: "GOD-020"
+    name: "Demetra"
+    domain: "sustainability"
+    title: "Sustainability & Development"
+    capabilities: [sustainability, land_use, resource_efficiency, development]
+    status: "reconstructed"
+  - id: "GOD-021"
+    name: "Selene"
+    domain: "time_series"
+    title: "Temporal Intelligence"
+    capabilities: [trend_analysis, time_series, forecasting, historical_comparison]
+    status: "reconstructed"
+  - id: "GOD-022"
+    name: "Iris"
+    domain: "information"
+    title: "Information Routing"
+    capabilities: [information_routing, notifications, summaries, dissemination]
+    status: "reconstructed"
+  - id: "GOD-023"
+    name: "Theia"
+    domain: "data_intelligence"
+    title: "Data Visibility & Analytics"
+    capabilities: [data_quality, analytics, dashboards, anomaly_detection]
+    status: "reconstructed"
+  - id: "GOD-024"
+    name: "Eirene"
+    domain: "peace"
+    title: "Conflict Prevention & Resolution"
+    capabilities: [conflict_analysis, deescalation, mediation, scenario_planning]
+    status: "reconstructed"
+  - id: "GOD-025"
+    name: "Nike"
+    domain: "performance"
+    title: "Performance & Objectives"
+    capabilities: [kpi, objectives, performance_analysis, benchmarking]
+    status: "reconstructed"
+  - id: "GOD-026"
+    name: "Clio"
+    domain: "history"
+    title: "History & Archive Intelligence"
+    capabilities: [archival_research, chronology, provenance, historical_context]
+    status: "reconstructed"
+  - id: "GOD-027"
+    name: "Mnemosyne"
+    domain: "memory"
+    title: "Memory & Knowledge Continuity"
+    capabilities: [memory, consolidation, provenance, continuity]
+    status: "reconstructed"
+  - id: "GOD-028"
+    name: "Harmonia"
+    domain: "integration"
+    title: "System Integration & Coherence"
+    capabilities: [integration, dependency_mapping, consistency, orchestration_support]
+    status: "reconstructed"
+  - id: "GOD-029"
+    name: "Vesta"
+    domain: "security"
+    title: "Security & Protection"
+    capabilities: [security, access_control, threat_analysis, protection]
+    status: "reconstructed"
+  - id: "GOD-030"
+    name: "Hera"
+    domain: "governance"
+    title: "Institutional Governance"
+    capabilities: [governance, organizational_structure, policy, oversight]
+    status: "reconstructed"
+  - id: "GOD-031"
+    name: "Aphrodite"
+    domain: "relationships"
+    title: "Relationship & Partnership Intelligence"
+    capabilities: [relationship_analysis, partnerships, stakeholder_value, reputation]
+    status: "reconstructed"
+  - id: "GOD-032"
+    name: "Hecate"
+    domain: "security_strategy"
+    title: "Thresholds, Contingency & Crisis Intelligence"
+    capabilities: [contingency, crisis_analysis, access_boundaries, decision_gates]
+    status: "reconstructed"
+  - id: "GOD-033"
+    name: "Persephone"
+    domain: "transformation"
+    title: "Transformation & Change Intelligence"
+    capabilities: [change_management, transformation, restructuring, transition_planning]
+    status: "reconstructed"
+
+orchestration:
+  owner: "ZOE-001"
+  model: "hierarchical_specialist_council"
+  agent_input:
+    task: string
+    context: object
+    permissions: array
+  agent_output:
+    result: object
+    confidence: number
+    sources: array
+  rules:
+    - "Zoë selects and coordinates specialist agents."
+    - "Agents operate only within granted permissions and tools."
+    - "Cross-domain tasks may delegate to multiple agents."
+    - "All tool calls and material state changes are auditable."
+    - "Unconfirmed/reconstructed identities remain explicitly versioned."
