@@ -39,7 +39,7 @@ class NaraConfig:
 
 @dataclass
 class NaraRateLimiter:
-    """Conservative process-local monthly request budget."""
+    """Conservative process-local request budget."""
 
     monthly_budget: int = 10_000
     requests_used: int = 0
@@ -60,9 +60,9 @@ class NaraCheckpoint:
     def initial(cls) -> "NaraCheckpoint":
         return cls(updated_at=datetime.now(timezone.utc).isoformat())
 
-    def next(self, sort_values: list[Any] | tuple[Any, ...] | None, count: int) -> "NaraCheckpoint":
+    def next(self, sort_values: tuple[Any, ...] | None, count: int) -> "NaraCheckpoint":
         return NaraCheckpoint(
-            search_after=tuple(sort_values) if sort_values else self.search_after,
+            search_after=sort_values or self.search_after,
             retrieved=self.retrieved + count,
             updated_at=datetime.now(timezone.utc).isoformat(),
         )
@@ -145,9 +145,8 @@ class NaraClient:
             total = total.get("value")
         return NaraPage(records, tuple(sort_values) if sort_values else None, int(total) if isinstance(total, int) else None)
 
-    def iter_records(self, *, page_size: int = 100, checkpoint: NaraCheckpoint | None = None, **params: Any) -> Iterator[NaraRecord]:
-        checkpoint = checkpoint or NaraCheckpoint.initial()
-        cursor = checkpoint.search_after
+    def iter_pages(self, *, page_size: int = 100, checkpoint: NaraCheckpoint | None = None, **params: Any) -> Iterator[NaraPage]:
+        cursor = (checkpoint or NaraCheckpoint.initial()).search_after
         while True:
             query = dict(params)
             query["limit"] = page_size
@@ -158,10 +157,14 @@ class NaraClient:
             page = self.search_records(**query)
             if not page.records:
                 return
-            yield from page.records
+            yield page
             if not page.sort_values or len(page.records) < page_size:
                 return
             cursor = page.sort_values
+
+    def iter_records(self, *, page_size: int = 100, checkpoint: NaraCheckpoint | None = None, **params: Any) -> Iterator[NaraRecord]:
+        for page in self.iter_pages(page_size=page_size, checkpoint=checkpoint, **params):
+            yield from page.records
 
     def get_record(self, na_id: str | int) -> NaraRecord:
         page = self.search_records(naId=str(na_id), limit=1)
@@ -223,16 +226,15 @@ class NaraImporter:
         self.client = client or NaraClient()
 
     def import_search(self, *, page_size: int = 100, checkpoint: NaraCheckpoint | None = None, **params: Any) -> NaraImportResult:
-        records = tuple(self.client.iter_records(page_size=page_size, checkpoint=checkpoint, **params))
-        next_cursor = None
-        if records:
-            # The last cursor is reconstructed by a one-page query only when callers need a resumable state.
-            page = self.client.search_records(**{**params, "limit": 1, "naId": records[-1].na_id})
-            next_cursor = page.sort_values
         previous = checkpoint or NaraCheckpoint.initial()
-        next_checkpoint = previous.next(next_cursor, len(records))
+        records: list[NaraRecord] = []
+        cursor = previous.search_after
+        for page in self.client.iter_pages(page_size=page_size, checkpoint=previous, **params):
+            records.extend(page.records)
+            cursor = page.sort_values or cursor
+        next_checkpoint = previous.next(cursor, len(records))
         return NaraImportResult(
-            records=records,
+            records=tuple(records),
             checkpoint=next_checkpoint,
             metadata={"source": "NARA", "api": "catalog-api-v2", "count": len(records)},
         )
