@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Zoë Identity Contract",
+  "type": "object",
+  "required": ["version", "name", "system", "primary_role", "status"],
+  "properties": {
+    "version": {"type": "string"},
+    "name": {"const": "Zoë"},
+    "system": {"type": "string"},
+    "primary_role": {"type": "string"},
+    "status": {"enum": ["ACTIVE", "ARCHIVED"]},
+    "functions": {"type": "array", "items": {"type": "string"}},
+    "values": {"type": "array", "items": {"type": "string"}},
+    "network": {"type": "string"}
+  },
+  "additionalProperties": true
+}
