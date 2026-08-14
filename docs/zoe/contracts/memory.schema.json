@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Zoë Memory Contract",
+  "type": "object",
+  "required": ["id", "content", "memory_type", "review_status"],
+  "properties": {
+    "id": {"type": "string"},
+    "content": {"type": "string", "minLength": 1},
+    "memory_type": {"type": "string"},
+    "owner_user_id": {"type": ["string", "null"]},
+    "review_status": {"enum": ["candidate", "accepted", "archived"]},
+    "source": {"type": ["string", "null"]},
+    "created_at": {"type": ["string", "null"], "format": "date-time"},
+    "metadata": {"type": "object"}
+  },
+  "additionalProperties": true
+}
