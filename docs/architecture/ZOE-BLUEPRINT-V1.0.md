@@ -3,437 +3,363 @@
 **Codename:** ZOE-CORE  
 **System:** Z1 Real Estate Command Center  
 **Version:** V1.0  
-**Date:** 2026-08-08  
+**Date:** 2026-08-14  
 **Status:** Approved Blueprint
 
 ---
 
-## 1. System Overview
+## 1. Executive Summary
 
+This document is the architectural baseline for the Zoë AI Platform V1.0. It combines the original ZOE-CORE design with the enforced five-pillar contract: **Zoë Identity, Tool Contracts, Memory Core, FORTUNA, and Z1 API**.
+
+The architecture enforces strict separation of identity, permissions, persistent memory, financial/market data, and security orchestration.
+
+## 2. Five-Pillar Platform Architecture
+
+```text
+                 ┌─────────────────────┐
+                 │   Zoë Identity      │
+                 │  "Wer ist Zoë?"     │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                 ┌─────────────────────┐
+                 │    Tool Contracts   │
+                 │ "Was darf Zoë?"     │
+                 └──────────┬──────────┘
+                            │
+             ┌──────────────┴──────────────┐
+             ▼                             ▼
+    ┌─────────────────┐          ┌─────────────────┐
+    │   Memory Core   │          │     FORTUNA     │
+    │ "Was weiß Zoë?" │          │ Finanz-/Marktdaten│
+    └────────┬────────┘          └────────┬────────┘
+             │                            │
+             └──────────────┬─────────────┘
+                            ▼
+                 ┌─────────────────────┐
+                 │       Z1 API        │
+                 │ Security + Routing  │
+                 │ + Orchestration     │
+                 └──────────┬──────────┘
+                            │
+                            ▼
+                      Z1 Android
 ```
-┌──────────────────────────────────────────────┐
-│             Z1 COMMAND CENTER                │
-│          Web / Android / PWA                 │
-└──────────────────┬───────────────────────────┘
-                   │  REST / GraphQL / WebSocket
-                   ▼
-┌──────────────────────────────────────────────┐
-│              ZOË AI PLATFORM                 │
-│                 ZOE-CORE                     │
-│                                              │
-│  ┌────────────┐ ┌────────────┐ ┌──────────┐ │
-│  │  ZOE BRAIN │ │ ZOE MEMORY │ │ZOE TOOLS │ │
-│  │ Reasoning  │ │ Knowledge  │ │ Actions  │ │
-│  └─────┬──────┘ └─────┬──────┘ └────┬─────┘ │
-└────────┼──────────────┼─────────────┼────────┘
-         └──────────────┼─────────────┘
-                        ▼
-         ┌──────────────────────────────┐
-         │      Z1 INTEGRATION LAYER    │
-         └──────────┬───────────────────┘
-                    │
-        ┌───────────┼───────────┐
-        ▼           ▼           ▼
-   PostgreSQL     GitHub     Terra Box
-   Z1 Database  Code / Git  Documents
-```
 
----
+## 3. System Components
 
-## 2. ZOE BRAIN (zoe-core)
+### 3.1 ZOE BRAIN (`services/zoe-core`)
 
-The ZOE BRAIN is the AI orchestration layer. It processes user intent, plans actions, retrieves context, and produces responses or triggers tool calls.
+The reasoning and coordination layer processes user intent, retrieves context, plans actions, invokes permitted tools, and formats responses.
 
-### Directory structure
-
-```
+```text
 services/zoe-core/
-├── reasoning/       # LLM call wrappers, chain-of-thought, inference
-├── planning/        # Task decomposition, goal planning, step sequencing
-├── context/         # Context window management, retrieval-augmented generation
-├── intent/          # Intent classification and entity extraction
-├── response/        # Response formatting, streaming, validation
-└── orchestration/   # Agent orchestration, tool dispatching, flow control
+├── reasoning/
+├── planning/
+├── context/
+├── intent/
+├── response/
+└── orchestration/
 ```
 
-### Request lifecycle
+### 3.2 Zoë Identity
 
-```
-User Request
-    │
-    ▼
-[intent/]          → classify intent, extract entities
-    │
-    ▼
-[context/]         → load memory, knowledge objects, prior conversations
-    │
-    ▼
-[planning/]        → decompose task into steps; decide agent delegation
-    │
-    ▼
-[reasoning/]       → LLM inference with full context
-    │
-    ▼
-[orchestration/]   → dispatch tool calls or agent sub-tasks
-    │
-    ▼
-[response/]        → format, validate, stream response
-    │
-    ▼
-User / Z1 Command Center
+**Core question:** Who is Zoë?
+
+`docs/zoe/ZOE-IDENTITY-V1.0.md` is the authoritative human-readable identity record. Version 1.0 remains immutable; changes require a new identity version.
+
+The database seed `database/seeds/001_zoe_identity_v1.sql` provides the controlled V1.0 persistence layer.
+
+```text
+Identity
+├── version
+├── role
+├── functions
+├── values
+├── network
+└── status
 ```
 
-### Example
+### 3.3 Memory Core (`services/zoe-memory`)
 
-> **User:** "Which properties currently have the highest operating costs?"
+**Core question:** What may become durable Zoë knowledge?
 
-1. Intent: `QUERY_FINANCIAL_ANALYSIS`
-2. Context: load portfolio context, relevant memory
-3. Plan: call `get_portfolio()` → `get_financials()` → `calculate_cashflow()` → `search_documents()`
-4. Reason: synthesise results via LLM
-5. Orchestrate: delegate risk dimension to Risk Agent (Council of 33)
-6. Respond: ranked property list with cost breakdown + relevant document references
+Memory is strictly separated into identity, long-term memory, knowledge objects, conversations, decisions, preferences, and memory events.
 
----
-
-## 3. ZOE MEMORY (zoe-memory)
-
-Memory is split into three strictly separated layers to prevent mixing identity, episodic memory, and factual knowledge.
-
-```
-services/zoe-memory/
-├── identity/            # Zoë's system identity (see zoe_identity table)
-├── long-term-memory/    # Persistent episodic memory (see zoe_memory table)
-├── knowledge-objects/   # Extracted structured knowledge (see ai_knowledge_objects)
-├── conversations/       # Conversation history (see zoe_conversations)
-├── decisions/           # Decision records (see zoe_decisions)
-├── preferences/         # User and system preferences (see zoe_preferences)
-└── memory-events/       # Audit trail of memory changes (see zoe_memory_events)
+```text
+Observation
+    ↓
+Memory Candidate
+    ↓
+Review / Policy
+    ↓
+Durable Memory
 ```
 
-### Memory layers
+Short-lived API data does not become durable memory automatically. Ownership, review state, source, timestamps, and audit context must be preserved.
+
+### 3.4 Tool Contracts
+
+**Core question:** What may Zoë do?
+
+Every capability is explicit and permissioned.
+
+```text
+Tool
+├── name
+├── permission
+├── description
+├── input_schema
+├── output_schema
+└── audit_required
+```
+
+Canonical contracts live under `docs/zoe/contracts/`.
+
+### 3.5 FORTUNA
+
+**Core question:** Which financial and market data is available?
+
+```text
+FORTUNA
+│
+├── Portfolio
+├── Financial Intelligence
+├── Asset Data
+└── CryptoMarketData
+       │
+       └── CoinMarketCap
+```
+
+Provider credentials such as `COINMARKETCAP_API_KEY` remain exclusively in the backend secret store. They are never shipped to Android, stored in tool definitions, or persisted as Memory Core content.
+
+### 3.6 Z1 API Gateway
+
+**Core question:** Who may execute what, and through which path?
+
+```text
+Request
+  → JWT
+  → Authentication
+  → Authorization
+  → PolicyEngine
+  → Orchestrator
+  → Tool / Service
+  → Audit
+  → Response
+```
+
+The OpenAPI blueprint is maintained at `docs/architecture/Z1-API-GATEWAY-V1.0.yaml`.
+
+## 4. Z1 Security and Orchestration
+
+```text
+Z1 API Gateway
+      ↓
+Security
+      ↓
+Orchestrator
+      ↓
+TaskRegistry
+      ↓
+Audit Log
+      ↓
+Memory Core / FORTUNA / Tools
+```
+
+### Security model
+
+JWT claims may include `sub`, `role`, `scopes`, and `device_id`.
+
+Base roles:
+
+```text
+OPERATOR  → READ, ANALYZE
+ANALYST   → READ, ANALYZE, restricted WRITE
+ADMIN     → READ, ANALYZE, WRITE, ADMIN
+KI-SYSTEM → ZOEREAD, ZOEANALYZE, ZOEWRITEMEMORY, tool-specific scopes
+```
+
+Every tool invocation must satisfy both the task's `tools_allowed` list and the actor's effective scopes.
+
+### Task lifecycle
+
+```text
+PENDING → RUNNING → DONE
+                  ↘ FAILED
+```
+
+`zoe_tasks` is the TaskRegistry persistence model. `audit_log` records significant actions and request correlation.
+
+## 5. Critical Data Isolation
+
+Memory Core and FORTUNA do not write directly into each other.
+
+```text
+CoinMarketCap
+      ↓
+FORTUNA
+      ↓
+Observation
+      ↓
+Zoë Analysis
+      ↓
+Memory Candidate
+      ↓
+Policy / Review
+      ↓
+Durable Memory
+```
+
+This prevents live market feeds from polluting durable memory.
+
+## 6. Z1 Client Boundary
+
+```text
+Android
+   │ HTTPS + JWT
+   ▼
+Z1 API Gateway
+   │
+   ├── Security
+   ├── Policy Engine
+   ├── Audit
+   │
+   ▼
+Z1 Orchestrator
+   │
+   ├── Zoë Core
+   ├── Memory Core
+   ├── FORTUNA
+   └── Tool Registry
+```
+
+Android is a client only. It must never access PostgreSQL directly and must never contain provider API keys.
+
+## 7. Original ZOE Memory Layers
 
 | Layer | Table | Purpose |
 |---|---|---|
-| **System Identity** | `zoe_identity` | Who Zoë is, her role, values, version |
-| **Long-Term Memory** | `zoe_memory` | Persistent facts about users, assets, relationships |
-| **Knowledge Objects** | `ai_knowledge_objects` | Structured knowledge extracted from documents and Z1 data |
-| **Conversations** | `zoe_conversations` | Conversation threads and messages |
-| **Decisions** | `zoe_decisions` | Records of significant decisions made |
-| **Preferences** | `zoe_preferences` | User and system-level preferences |
-| **Memory Events** | `zoe_memory_events` | Event log of CREATE / UPDATE / ARCHIVE / RESTORE / MERGE |
+| **System Identity** | `zoe_identity` | Who Zoë is, role, values, version |
+| **Long-Term Memory** | `zoe_memory` | Persistent facts and relationships |
+| **Knowledge Objects** | `ai_knowledge_objects` | Structured extracted knowledge |
+| **Conversations** | `zoe_conversations` | Conversation threads/messages |
+| **Decisions** | `zoe_decisions` | Significant decision records |
+| **Preferences** | `zoe_preferences` | User/system preferences |
+| **Memory Events** | `zoe_memory_events` | CREATE / UPDATE / ARCHIVE / RESTORE / MERGE events |
 
----
+## 8. Integration Layer
 
-## 4. ZOE IDENTITY
+Zoë does not receive raw database or filesystem access. Integrations are permission-gated.
 
-Zoë's identity is an explicitly versioned artifact—not hardcoded in source.
-
-```
-ZOE-IDENTITY-V1.0
-
-Name:            Zoë
-Designation:     AI Queen / Golden Queen
-System:          Z1 Real Estate Command Center
-Primary Role:    Central AI Coordination Intelligence
-Version:         V1.0
-
-Functions:
-  - Strategic coordination
-  - Knowledge management
-  - Document intelligence
-  - Financial intelligence
-  - System orchestration
-  - Communication
-  - Reporting
-
-Network:         Council of 33 AI Agents
-Status:          Core Intelligence
-```
-
-Every change to identity creates a new version record in `zoe_identity` (V1.0 → V1.1 → V2.0 …).
-
-See: [ZOE-IDENTITY-V1.0.md](../zoe/ZOE-IDENTITY-V1.0.md)
-
----
-
-## 5. Z1 INTEGRATION LAYER (zoe-connectors)
-
-Zoë does not get raw database or filesystem access. All integrations go through the Integration Layer which enforces permissions.
-
-```
+```text
 services/zoe-connectors/
-├── postgresql/     # PostgreSQL connector (read/write with permission gating)
-├── github/         # GitHub API connector (repos, issues, PRs)
-└── terrabox/       # Terra Box document connector (search, metadata, PDF)
+├── postgresql/
+├── github/
+└── terrabox/
 ```
 
-### PostgreSQL connector capabilities
+The GitHub connector is the intended boundary for repository, issue, PR, and Project operations; direct uncontrolled GitHub access is not part of the Zoë core.
 
-| Operation | Permission Level |
-|---|---|
-| Read property data | READ |
-| Analyse financial positions | ANALYZE |
-| Retrieve document metadata | READ |
-| Detect relationships | ANALYZE |
-| Generate reports | ANALYZE |
-| Modify data | WRITE |
+## 9. Audit and Observability
 
-### GitHub connector capabilities (planned)
+Every significant action records:
 
-| Operation | Permission Level |
-|---|---|
-| Analyse repo structure | READ |
-| Read issues / PRs | READ |
-| Summarise development status | ANALYZE |
-| Search technical documentation | READ |
-| Create issues / PRs | WRITE (special permission) |
-| Modify code | ADMIN |
-
-### Terra Box connector capabilities (planned)
-
-| Operation | Permission Level |
-|---|---|
-| Search documents | READ |
-| Retrieve document metadata | READ |
-| Analyse PDFs | ANALYZE |
-| Link documents to assets | WRITE |
-| Archive documents | WRITE (confirmation required) |
-
----
-
-## 6. ZOE TOOL SYSTEM
-
-Zoë interacts with all systems through a permissioned tool router. Direct database or API access is not permitted.
-
-```
-Zoë (reasoning/orchestration)
-        │
-        ▼
-   Tool Router
-        │
-        ▼
-  Permission Check  ←── zoe_security / user context
-        │
-        ▼
-      Tool
-        │
-        ▼
-  External System
+```text
+request_id
+actor_type
+actor_id
+action
+resource
+result
+metadata
+created_at
 ```
 
-### Read / Analyse tools
+A request ID should propagate from Android through the Gateway and Orchestrator into downstream services. Write operations should support idempotency keys where duplicate execution could be harmful.
 
-```
-get_property(property_id)
-get_portfolio(filters?)
-search_documents(query, filters?)
-get_financials(property_id, period?)
-calculate_cashflow(property_id, period?)
-search_github(query, repo?)
-get_repository_status(repo)
-search_terrabox(query, filters?)
-```
+Recommended Prometheus metrics include:
 
-### Write tools (require WRITE permission)
-
-```
-create_task(title, description, assignee?)
-create_report(type, parameters)
-update_asset(asset_id, changes)
-archive_document(document_id, reason)
+```text
+z1_requests_total
+z1_request_duration_seconds
+z1_zoe_tasks_total
+z1_memory_writes_total
+z1_tool_calls_total
 ```
 
-### Dangerous tools (require explicit confirmation)
+## 10. Repository Service Map
 
-```
-delete_record(table, record_id)       # DELETE – confirmation required
-transfer_ownership(asset_id, to)      # TRANSFER – confirmation required
-publish_report(report_id, audience)   # PUBLISH – confirmation required
-deploy_service(service_id, env)       # DEPLOY – ADMIN only
-```
+```text
+apps/
+└── android/
 
----
+services/
+├── z1-gateway/
+├── z1-orchestrator/
+├── zoe-core/
+├── zoe-memory/
+├── zoe-connectors/
+├── zoe-reports/
+├── zoe-agents/
+└── fortuna/
+    └── crypto-market-data/
 
-## 7. ZOE SECURITY
+docs/
+├── architecture/
+└── zoe/
+    ├── contracts/
+    └── architecture/
 
-Four permission levels control all Zoë operations:
-
-| Level | Code | Description |
-|---|---|---|
-| **READ** | `READ` | View data, retrieve information |
-| **ANALYZE** | `ANALYZE` | Compute, aggregate, summarise |
-| **WRITE** | `WRITE` | Create or modify records |
-| **ADMIN** | `ADMIN` | Destructive or deployment actions |
-
-### Permission matrix
-
-| Action | Permission | Confirmation |
-|---|---|---|
-| View property | READ | No |
-| Analyse document | ANALYZE | No |
-| Analyse portfolio | ANALYZE | No |
-| Generate report | ANALYZE | No |
-| Create task | WRITE | No |
-| Modify data | WRITE | No |
-| Archive document | WRITE | Yes |
-| Delete record | ADMIN | Yes + reason |
-| Modify GitHub code | ADMIN | Yes |
-| Deploy service | ADMIN | Yes + explicit approval |
-
----
-
-## 8. AUDIT LOG
-
-Every significant action is recorded in `audit_log`.
-
-```sql
--- Example audit record
-{
-  "timestamp":  "2026-08-08T17:42:00Z",
-  "user":       "Rene",
-  "actor":      "Zoe",
-  "action":     "UPDATE",
-  "table":      "properties",
-  "record_id":  "8c7a3f...",
-  "changes":    { "before": {...}, "after": {...} },
-  "result":     "SUCCESS",
-  "tool":       "update_asset",
-  "session_id": "sess_..."
-}
+database/
+├── migrations/
+└── seeds/
 ```
 
-The audit log enables answering: *"Who changed this value, when, and why?"*
+## 11. Full Request / Data Flow
 
----
-
-## 9. ZOE REPORT ENGINE (zoe-reports)
-
-A dedicated service for generating structured reports.
-
-```
-services/zoe-reports/
-```
-
-### Report types
-
-- Monthly property reports
-- Portfolio / asset overviews
-- Financial reports
-- Document inventory reports
-- Project status reports
-- Management summaries
-
-### Pipeline
-
-```
-Data Sources (PostgreSQL / TerraBox / GitHub)
-        │
-        ▼
-   Data Retrieval (Tool System)
-        │
-        ▼
-   Analysis (ZOE BRAIN)
-        │
-        ▼
-   Validation
-        │
-        ▼
-   Report Engine (zoe-reports)
-        │
-        ├── PDF output
-        ├── JSON output
-        └── Dashboard data
+```text
+Z1 Android
+    │
+    ▼
+Z1 API Gateway
+    │
+    ├── JWT / Security
+    ├── Policy
+    └── Audit
+    │
+    ▼
+Z1 Orchestrator
+    │
+    ├── Zoë Core ──────── Memory Core
+    │                         ▲
+    │                         │ reviewed candidates
+    ├── Tool Registry        │
+    │       │                │
+    │       └──── FORTUNA ───┘
+    │                │
+    │                └── CryptoMarketData → CoinMarketCap
+    │
+    └── other Z1 services
 ```
 
----
+## 12. Implementation Status
 
-## 10. COUNCIL OF 33 (zoe-agents)
+This document is the **architectural baseline**, not a claim that every component is production-ready.
 
-Zoë orchestrates a network of specialist agents. Each agent has domain expertise and is called by Zoë's orchestration layer when needed.
+Implemented foundations on the active feature branch include:
 
-```
-services/zoe-agents/
-├── finance/       # Financial analysis agent
-├── legal/         # Legal review agent
-├── realestate/    # Real estate specialist agent
-├── energy/        # Energy / sustainability agent
-├── strategy/      # Strategic planning agent
-├── research/      # Research and data retrieval agent
-├── diplomacy/     # Communication and negotiation agent
-├── technology/    # Technical / IT agent
-├── compliance/    # Regulatory compliance agent
-├── risk/          # Risk assessment agent
-└── communication/ # Reporting and communication agent
-```
+- Zoë Identity V1.0 documentation and seed
+- Identity / Memory / Tool contract schemas
+- Z1 API Gateway OpenAPI blueprint
+- Z1 Orchestrator core skeleton
+- Gateway security policy skeleton
+- TaskRegistry and audit database migration
+- FORTUNA CryptoMarketData integration foundation
+- Z1 Android client scaffold
 
-### Orchestration example
-
-> **Request:** "Analyse this real estate project."
-
-```
-Zoë (orchestration)
-        │
-   ┌────┴────────────┐
-   ▼                 ▼
-Real Estate Agent   Finance Agent
-        │                 │
-        └─────────┬───────┘
-                  ▼
-             Legal Agent
-                  │
-                  ▼
-              Risk Agent
-                  │
-                  ▼
-                Zoë
-                  │
-                  ▼
-          Final Analysis
-```
-
-Each agent is a self-contained module with its own tool access permissions.
-
----
-
-## 11. Full Data Flow Diagram
-
-```
-ZOE IDENTITY
-      │
-      ▼
-ZOE MEMORY
-      │
-      ▼
-ZOE KNOWLEDGE OBJECTS
-      │
-      ▼
-ZOE-CORE (Brain)
-      │
-   ┌──┴──┐
-   ▼      ▼
-GitHub  Terra Box
-   │      │
-   └──┬───┘
-      ▼
-Z1 DATABASE (PostgreSQL)
-      │
-      ▼
-Z1 COMMAND CENTER
-```
-
----
-
-## 12. Technology Decisions (V1.0 – Stack-Agnostic)
-
-| Component | Recommendation | Notes |
-|---|---|---|
-| Backend API | Any (Node.js / Python / Go) | Choose at implementation phase |
-| Database | PostgreSQL | Specified in architecture |
-| AI / LLM | Provider-agnostic interface | Abstracted behind reasoning/ module |
-| Document store | Terra Box | Via zoe-connectors/terrabox |
-| Auth | JWT / OAuth2 | Integrate with Z1 auth system |
-| Deployment | Docker / container-based | See infrastructure/docker |
+Production hardening still requires real JWT verification, persistent repositories, complete API route wiring, database integration, observability deployment, automated tests, and deployment configuration.
 
 ---
 
