@@ -1,0 +1,104 @@
+openapi: 3.1.0
+info:
+  title: Z1 API Gateway
+  version: 1.0.0
+  description: Z1 Command Center unified API layer
+servers:
+  - url: https://api.z1-command-center.com
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    StatusResponse:
+      type: object
+      properties:
+        status: { type: string }
+        timestamp: { type: string, format: date-time }
+        request_id: { type: string }
+        data: { type: object }
+        meta: { type: object }
+    ZoeTask:
+      type: object
+      required: [goal]
+      properties:
+        goal: { type: string }
+        context: { type: object }
+        tools_allowed:
+          type: array
+          items: { type: string }
+    MemoryWrite:
+      type: object
+      required: [type, content]
+      properties:
+        type: { type: string }
+        content: { type: string }
+        scope: { type: string }
+security:
+  - bearerAuth: []
+paths:
+  /api/z1/status:
+    get:
+      summary: Systemstatus
+      tags: [Status]
+      responses:
+        '200': { description: Status Core }
+  /api/z1/portfolio:
+    get:
+      summary: Portfolio Overview
+      tags: [Portfolio]
+      responses:
+        '200': { description: Portfolio snapshot }
+  /api/z1/matrix:
+    get:
+      summary: Full Position Matrix
+      tags: [Matrix]
+      responses:
+        '200': { description: Matrix data }
+  /api/z1/cluster/{type}:
+    get:
+      summary: Cluster Data
+      tags: [Cluster]
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema: { type: string, enum: [mining, immobilien, tech] }
+      responses:
+        '200': { description: Cluster view }
+  /api/z1/expansion:
+    get:
+      summary: Expansion Engine status
+      tags: [Expansion]
+      responses:
+        '200': { description: Expansion metrics }
+  /api/z1/zoe/tasks:
+    post:
+      summary: Create Zoë Task
+      tags: [Zoë]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ZoeTask' }
+      responses:
+        '200': { description: Task accepted }
+  /api/z1/zoe/memory:
+    post:
+      summary: Write Zoë Memory
+      tags: [Zoë Memory]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemoryWrite' }
+      responses:
+        '200': { description: Memory stored }
+  /api/z1/reports:
+    get:
+      summary: List Reports
+      tags: [Reports]
+      responses:
+        '200': { description: Report list }
