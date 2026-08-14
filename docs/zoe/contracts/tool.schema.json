@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Zoë Tool Contract",
+  "type": "object",
+  "required": ["name", "permission", "input_schema", "output_schema"],
+  "properties": {
+    "name": {"type": "string"},
+    "permission": {"type": "string"},
+    "description": {"type": "string"},
+    "input_schema": {"type": "object"},
+    "output_schema": {"type": "object"},
+    "audit_required": {"type": "boolean", "default": true}
+  },
+  "additionalProperties": true
+}
