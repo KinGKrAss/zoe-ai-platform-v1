@@ -25,8 +25,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: pip
 
-      - name: Install test dependencies
-        run: python -m pip install --upgrade pip && python -m pip install -e '.[test]'
+      - name: Install test and development dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e '.[test,dev]'
 
       - name: Ruff
         run: ruff check services tools
