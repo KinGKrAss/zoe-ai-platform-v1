@@ -28,6 +28,9 @@ jobs:
       - name: Install test and development dependencies
         run: python -m pip install --upgrade pip && python -m pip install -e '.[test,dev]'
 
+      - name: Validate migration numbering
+        run: python tools/check_migrations.py
+
       - name: Ruff
         run: ruff check services tools
         continue-on-error: true
