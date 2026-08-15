@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Zoë Council of 33 Registry",
+  "type": "object",
+  "required": ["version", "queen", "permission_levels", "agents", "orchestration"],
+  "properties": {
+    "version": {"type": "string"},
+    "status": {"type": "string"},
+    "queen": {
+      "type": "object",
+      "required": ["id", "name", "role", "status"],
+      "properties": {
+        "id": {"type": "string"},
+        "name": {"type": "string"},
+        "title": {"type": "string"},
+        "role": {"const": "central_orchestrator"},
+        "domain": {"type": "string"},
+        "status": {"type": "string"},
+        "note": {"type": "string"}
+      }
+    },
+    "permission_levels": {
+      "type": "array",
+      "items": {"enum": ["READ", "ANALYZE", "WRITE", "ADMIN"]},
+      "uniqueItems": true
+    },
+    "agents": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "domain", "title", "capabilities", "status"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^GOD-[0-9]{3}$"},
+          "name": {"type": "string"},
+          "domain": {"type": "string"},
+          "title": {"type": "string"},
+          "capabilities": {"type": "array", "items": {"type": "string"}},
+          "status": {"enum": ["confirmed", "reconstructed", "proposed"]}
+        }
+      }
+    },
+    "orchestration": {
+      "type": "object",
+      "required": ["owner", "model", "agent_input", "agent_output", "rules"],
+      "properties": {
+        "owner": {"const": "ZOE-001"},
+        "model": {"type": "string"},
+        "agent_input": {"type": "object"},
+        "agent_output": {"type": "object"},
+        "rules": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}
