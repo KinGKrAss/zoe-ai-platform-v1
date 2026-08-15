@@ -4,13 +4,15 @@
 **System:** Z1 Real Estate Command Center  
 **Role:** Central AI, Knowledge, Analysis and Coordination Platform  
 **Version:** V1.0  
-**Status:** Blueprint / Scaffold Phase
+**Status:** Foundation implementation — P0 runtime and delivery work in progress
 
 ---
 
 ## Overview
 
 Zoë is the central intelligence of the Z1 Real Estate Command Center. She is not a chatbot—she is a persistent, versionable AI platform with her own identity, memory, knowledge base, tool system, and security model.
+
+The current implementation establishes the executable Z1 identity/authorization boundary, a provider-agnostic Zoë orchestration boundary, deterministic database migration numbering, Python packaging, automated tests, and a reproducible Docker/CI foundation.
 
 ```
 ┌──────────────────────┐
@@ -51,6 +53,7 @@ zoe-ai-platform-v1/
 │   └── command-center/
 │
 ├── services/                    # Backend services
+│   ├── z1-core/                 # Z1 identity, URI, permissions, runtime
 │   ├── zoe-core/                # ZOE BRAIN – reasoning, planning, orchestration
 │   ├── zoe-memory/              # ZOE MEMORY – identity, long-term memory, knowledge
 │   ├── zoe-agents/              # Council of 33 specialist agents
@@ -99,6 +102,18 @@ zoe-ai-platform-v1/
 3. **Every action is auditable** – all significant operations are logged in `audit_log`.
 4. **Security is layered** – READ / ANALYZE / WRITE / ADMIN permission model.
 5. **The Council of 33 is orchestrated** – Zoë coordinates specialist agents, she does not replace them.
+
+---
+
+## Current Build Roadmap
+
+- **P0.1** Packaging + test runner — implemented on the foundation branch
+- **P0.2** Migration consolidation — implemented on the foundation branch
+- **P0.3** Z1 Core runtime — initial executable boundary implemented
+- **P0.4** Zoë Core runtime — initial provider-agnostic orchestration boundary implemented
+- **P0.5** Memory + Wealth Registry integration — next integration stage
+- **P0.6** CI/CD + Docker — initial CI and local Docker/Postgres stack implemented
+- **P1** Android/Web Command Center — application integration stage
 
 ---
 
