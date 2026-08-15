@@ -23,6 +23,8 @@ dev = [
 ]
 
 [tool.setuptools]
+packages = []
+py-modules = []
 include-package-data = true
 
 [tool.pytest.ini_options]
