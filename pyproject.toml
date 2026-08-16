@@ -26,6 +26,9 @@ dev = [
   "ruff>=0.12,<1",
   "mypy>=1.16,<2",
 ]
+embeddings = [
+  "openai>=1.99,<2",
+]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
