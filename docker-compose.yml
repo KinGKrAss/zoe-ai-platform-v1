@@ -1,0 +1,22 @@
+services:
+  zoe-postgres:
+    image: postgres:16-alpine
+    container_name: zoe-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: zoe
+      POSTGRES_USER: zoe
+      POSTGRES_PASSWORD: zoe_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - zoe_postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zoe -d zoe"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  zoe_postgres_data:
