@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zoe-ai-platform-v1"
+version = "1.0.0"
+description = "Zoë AI Platform for the Z1 administration system"
+requires-python = ">=3.11"
+readme = "README.md"
+license = {text = "Proprietary"}
+authors = [{name = "KinGKrAss"}]
+dependencies = [
+  "fastapi>=0.116,<1",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3,<9",
+  "httpx>=0.28,<1",
+  "pytest-cov>=5,<7",
+]
+dev = [
+  "ruff>=0.12,<1",
+  "mypy>=1.16,<2",
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["apps", "services"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = "-ra --strict-config"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+
+[tool.coverage.run]
+branch = true
+source = ["apps", "services"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
