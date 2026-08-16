@@ -1,0 +1,42 @@
+name: Z1 Command Center - M2
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  app-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/command-center
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: apps/command-center/package.json
+      - name: Install dependencies
+        run: npm install
+      - name: Start application
+        run: node server.js > /tmp/z1.log 2>&1 & echo $! > /tmp/z1.pid
+      - name: Verify health endpoint
+        run: |
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/z1.log
+          exit 1
+      - name: Stop application
+        if: always()
+        run: kill $(cat /tmp/z1.pid) 2>/dev/null || true
