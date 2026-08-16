@@ -14,6 +14,9 @@ jobs:
     name: PostgreSQL + Z1 schema check
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      # Test-only secret. Production deployments must inject their own secret.
+      Z1_JWT_SECRET: ci-only-secret-not-for-production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
