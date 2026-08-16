@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Z1 Command Center · Zoë</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    body { margin: 0; background: #0b1020; color: #eef2ff; }
+    main { max-width: 1100px; margin: auto; padding: 32px 20px; }
+    .hero { padding: 28px; border: 1px solid #293452; border-radius: 20px; background: #111a31; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; margin-top: 18px; }
+    .card { padding: 18px; border: 1px solid #293452; border-radius: 14px; background: #0f172a; }
+    .ok { color: #72f1b8; } .muted { color: #9aa7c2; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <div class="muted">Z1 REAL ESTATE COMMAND CENTER</div>
+    <h1>👑 Zoë Core</h1>
+    <p>Central AI coordination, memory, tools and audited system orchestration.</p>
+    <p id="health" class="muted">Checking runtime…</p>
+  </section>
+  <section id="modules" class="grid"></section>
+  <section class="card" style="margin-top:18px"><h2>System Status</h2><pre id="status">Loading…</pre></section>
+</main>
+<script>
+async function load() {
+  const health = await fetch('/api/health').then(r => r.json()).catch(() => ({status:'offline'}));
+  document.querySelector('#health').textContent = `Runtime: ${health.status} · PostgreSQL: ${health.database ? 'online' : 'unavailable'}`;
+  document.querySelector('#health').className = health.status === 'ok' ? 'ok' : 'muted';
+  const modules = await fetch('/api/modules').then(r => r.json()).catch(() => []);
+  document.querySelector('#modules').innerHTML = modules.map(m => `<div class="card"><strong>${m.name}</strong><div class="muted">${m.status}</div></div>`).join('');
+  const status = await fetch('/api/system/status').then(r => r.json()).catch(e => ({error:e.message}));
+  document.querySelector('#status').textContent = JSON.stringify(status, null, 2);
+}
+load();
+</script>
+</body>
+</html>
