@@ -1,0 +1,49 @@
+name: Z1 Platform CI - Foundation
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  database-check:
+    name: PostgreSQL Foundation Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start PostgreSQL
+        run: docker compose up -d zoe-postgres
+
+      - name: Wait for PostgreSQL health
+        run: |
+          for i in {1..30}; do
+            status=$(docker inspect --format='{{.State.Health.Status}}' zoe-postgres 2>/dev/null || true)
+            echo "PostgreSQL health: ${status:-starting}"
+            if [ "$status" = "healthy" ]; then
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "PostgreSQL did not become healthy"
+          docker compose ps
+          docker compose logs zoe-postgres
+          exit 1
+
+      - name: Verify database connection
+        run: docker compose exec -T zoe-postgres pg_isready -U zoe -d zoe
+
+      - name: Verify migration tables
+        run: |
+          docker compose exec -T zoe-postgres psql -U zoe -d zoe -v ON_ERROR_STOP=1 -c '\dt'
+
+      - name: Cleanup
+        if: always()
+        run: docker compose down -v
