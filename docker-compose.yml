@@ -18,5 +18,21 @@ services:
       timeout: 5s
       retries: 12
 
+  z1-command-center:
+    build:
+      context: ./apps/command-center
+    container_name: z1-command-center
+    restart: unless-stopped
+    depends_on:
+      zoe-postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://zoe:zoe_dev_password@zoe-postgres:5432/zoe
+      Z1_JWT_SECRET: ${Z1_JWT_SECRET:?Set Z1_JWT_SECRET in the environment}
+    ports:
+      - "3000:3000"
+
 volumes:
   zoe_postgres_data:
