@@ -34,7 +34,7 @@ exclude = ["database*", "integrations*", "infrastructure*"]
 minversion = "8.0"
 testpaths = ["apps", "services"]
 python_files = ["test_*.py", "*_test.py"]
-pythonpath = ["services/ppt/backend"]
+pythonpath = ["services/ppt/backend", "services/zoe-memory"]
 addopts = "-ra --strict-config"
 
 [tool.ruff]
