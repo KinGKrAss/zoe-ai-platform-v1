@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 from decimal import Decimal
-
-from rootstock_connector import RootstockClient
+from typing import Protocol
 
 from .models import Claim
 
 
-async def verify_rootstock(claim: Claim, client: RootstockClient) -> tuple[bool, list[str]]:
+class RootstockReader(Protocol):
+    async def chain_id(self) -> int: ...
+    async def block_number(self) -> int: ...
+    async def balance_wei(self, address: str) -> int: ...
+
+
+async def verify_rootstock(claim: Claim, client: RootstockReader) -> tuple[bool, list[str]]:
     if claim.wallet is None:
         return False, ["rootstock wallet claim is missing"]
     wallet = claim.wallet
