@@ -1,0 +1,79 @@
+name: Z1 Platform CI - Foundation + Runtime
+
+on:
+  push:
+    branches: [main, 'codex/**']
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  database-check:
+    name: PostgreSQL + Z1 schema check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Test-only secret. Production deployments must inject their own secret.
+      Z1_JWT_SECRET: ci-only-secret-not-for-production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Start PostgreSQL
+        run: docker compose up -d zoe-postgres
+
+      - name: Wait for PostgreSQL health
+        run: |
+          for i in {1..30}; do
+            status=$(docker inspect --format='{{.State.Health.Status}}' zoe-postgres 2>/dev/null || true)
+            echo "PostgreSQL health: ${status:-starting}"
+            if [ "$status" = "healthy" ]; then exit 0; fi
+            sleep 2
+          done
+          docker compose ps
+          docker compose logs zoe-postgres
+          exit 1
+
+      - name: Verify database connection
+        run: docker compose exec -T zoe-postgres pg_isready -U zoe -d zoe
+
+      - name: Verify critical Z1 tables
+        run: |
+          docker compose exec -T zoe-postgres psql -U zoe -d zoe -v ON_ERROR_STOP=1 -c "SELECT to_regclass('public.zoe_identity'), to_regclass('public.zoe_memory'), to_regclass('public.zoe_memory_embeddings'), to_regclass('public.z1_users'), to_regclass('public.z1_roles'), to_regclass('public.z1_permissions'), to_regclass('public.audit_log');"
+
+      - name: Verify Zoë identity seed
+        run: |
+          test "$(docker compose exec -T zoe-postgres psql -U zoe -d zoe -tAc "SELECT COUNT(*) FROM zoe_identity WHERE version='V1.0' AND name='Zoë'")" = "1"
+
+      - name: Install Node runtime dependencies
+        working-directory: apps/command-center
+        run: npm install
+
+      - name: Static Node syntax check
+        working-directory: apps/command-center
+        run: npm run check
+
+      - name: Start Command Center against CI database
+        working-directory: apps/command-center
+        env:
+          DATABASE_URL: postgresql://zoe:zoe_dev_password@127.0.0.1:5432/zoe
+          Z1_JWT_SECRET: ci-only-secret-not-for-production
+          PORT: 3000
+        run: node server.js > /tmp/z1-command-center.log 2>&1 & echo $! > /tmp/z1.pid
+
+      - name: Verify Command Center health
+        run: |
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/z1-command-center.log
+          exit 1
+
+      - name: Cleanup
+        if: always()
+        run: |
+          kill $(cat /tmp/z1.pid) 2>/dev/null || true
+          docker compose down -v
