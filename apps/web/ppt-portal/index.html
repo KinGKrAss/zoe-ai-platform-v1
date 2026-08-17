@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Preussen Point — Z1 PPT Portal</title>
+  <style>
+    body{font-family:system-ui,sans-serif;max-width:860px;margin:40px auto;padding:0 18px;background:#0f1115;color:#f5f5f5}
+    .card{background:#191d24;border:1px solid #303744;border-radius:16px;padding:20px;margin:16px 0}
+    button{padding:11px 16px;border-radius:10px;border:0;cursor:pointer}
+    input{padding:11px;border-radius:8px;border:1px solid #444;background:#101319;color:#fff;width:100%;box-sizing:border-box;margin:6px 0 12px}
+    code{word-break:break-all}.muted{color:#aeb6c2}.danger{color:#ffb4ab}
+  </style>
+</head>
+<body>
+  <h1>🪙 Preussen Point — Z1 PPT Portal</h1>
+  <p class="muted">Z1 → Finanzfuchs → PPT Contract → MetaMask → PPT Portal</p>
+  <div class="card">
+    <h2>Wallet</h2>
+    <button id="connect">Connect MetaMask</button>
+    <p id="wallet" class="muted">Not connected.</p>
+  </div>
+  <div class="card">
+    <h2>Send PPT</h2>
+    <label>Token contract</label>
+    <input id="token" placeholder="0x…" />
+    <label>Recipient</label>
+    <input id="recipient" placeholder="0x…" />
+    <label>Amount (PPT)</label>
+    <input id="amount" inputmode="decimal" placeholder="12.50" />
+    <button id="send">Create & sign transfer</button>
+    <p id="status" class="muted"></p>
+  </div>
+  <div class="card">
+    <h2>Safety</h2>
+    <p class="danger">Never enter a seed phrase or private key here. Every blockchain transaction is signed in MetaMask.</p>
+    <p class="muted">This portal does not assert that PPT has a fixed EUR value. Reserve and redemption claims must be independently verified.</p>
+  </div>
+<script>
+const TRANSFER_SELECTOR='a9059cbb';
+let account=null;
+function cleanAddress(a){if(!/^0x[0-9a-fA-F]{40}$/.test(a)) throw new Error('Invalid address'); return a.slice(2).toLowerCase();}
+function encodeTransfer(to, amount){
+  const units=BigInt(amount.split('.')[0]||'0')*10n**18n + BigInt(((amount.split('.')[1]||'').padEnd(18,'0')).slice(0,18));
+  return '0x'+TRANSFER_SELECTOR+cleanAddress(to).padStart(64,'0')+units.toString(16).padStart(64,'0');
+}
+async function connect(){
+  if(!window.ethereum) throw new Error('MetaMask not detected');
+  const accounts=await window.ethereum.request({method:'eth_requestAccounts'});
+  account=accounts[0]; document.getElementById('wallet').textContent=account;
+}
+async function send(){
+  if(!account) await connect();
+  const token=cleanAddress(document.getElementById('token').value);
+  const recipient=cleanAddress(document.getElementById('recipient').value);
+  const amount=document.getElementById('amount').value.trim();
+  if(!/^\d+(\.\d{1,18})?$/.test(amount)) throw new Error('Invalid PPT amount');
+  const tx=await window.ethereum.request({method:'eth_sendTransaction',params:[{from:account,to:'0x'+token,data:encodeTransfer(recipient,amount)}]});
+  document.getElementById('status').textContent='Transaction submitted: '+tx;
+}
+document.getElementById('connect').onclick=()=>connect().catch(e=>document.getElementById('wallet').textContent=e.message);
+document.getElementById('send').onclick=()=>send().catch(e=>document.getElementById('status').textContent=e.message);
+</script>
+</body>
+</html>

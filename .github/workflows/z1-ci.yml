@@ -2,7 +2,7 @@ name: Z1 CI
 
 on:
   push:
-    branches: [main, 'codex/**']
+    branches: [main, 'codex/**', 'agent/**']
   pull_request:
 
 jobs:

@@ -4,7 +4,6 @@ import hashlib
 import re
 import uuid
 from difflib import SequenceMatcher
-from itertools import combinations
 
 from .models import MemoryCandidate, Message, SourceReference
 

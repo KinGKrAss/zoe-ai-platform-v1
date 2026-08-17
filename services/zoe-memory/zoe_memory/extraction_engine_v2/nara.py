@@ -11,6 +11,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Iterator, Mapping
 
+from .models import Message
+
 NARA_BASE_URL = "https://catalog.archives.gov/api/v2"
 
 
@@ -199,10 +201,8 @@ class NaraClient:
         )
 
 
-def nara_to_message(record: NaraRecord) -> "Message":
+def nara_to_message(record: NaraRecord) -> Message:
     """Adapt an archival record to the existing conservative extraction pipeline."""
-    from .models import Message
-
     title = record.title or "Untitled NARA record"
     return Message(
         conversation_id=f"nara:{record.na_id}",
