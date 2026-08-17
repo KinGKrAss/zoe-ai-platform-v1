@@ -102,14 +102,19 @@ class ExtractionEngineV2:
         return len(source_tokens & synthesis_tokens) >= 2
 
     def deduplicate(self, candidates: list[MemoryCandidate]) -> list[MemoryCandidate]:
-        exact: dict[str, MemoryCandidate] = {}
+        # Candidate types represent different evidence semantics. A synthesis
+        # message can legitimately yield both a fact candidate and a reconstruction
+        # candidate, so deduplicate within each type rather than collapsing them.
+        exact: dict[tuple[str, str], MemoryCandidate] = {}
         for candidate in candidates:
-            exact.setdefault(candidate.dedupe_key, candidate)
+            exact.setdefault((candidate.candidate_type, candidate.dedupe_key), candidate)
 
         result: list[MemoryCandidate] = []
         for candidate in exact.values():
             duplicate = False
             for existing in result:
+                if candidate.candidate_type != existing.candidate_type:
+                    continue
                 same_thread = bool({s.conversation_id for s in candidate.source_references}
                                     & {s.conversation_id for s in existing.source_references})
                 if same_thread and SequenceMatcher(None, normalize(candidate.content), normalize(existing.content)).ratio() >= self.similarity_threshold:
