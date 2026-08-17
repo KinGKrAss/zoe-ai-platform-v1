@@ -1,0 +1,14 @@
+{
+  "partners": [
+    {
+      "id": "nl-venlo-nobodys-place",
+      "name": "Nobody's Place",
+      "country": "NL",
+      "city": "Venlo",
+      "status": "candidate",
+      "ppt_payment_enabled": false,
+      "jurisdiction_review": "pending",
+      "notes": "Candidate only. No partnership, ownership, product authorization or payment acceptance is asserted."
+    }
+  ]
+}
