@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from finanzfuchs.api import app, ledger
+from finanzfuchs.api import app
 
 client = TestClient(app)
 
