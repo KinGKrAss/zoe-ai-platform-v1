@@ -17,7 +17,7 @@ jobs:
         with:
           python-version: '3.11'
       - run: python -m pip install -r requirements.txt pytest
-      - run: PYTHONPATH=. pytest ../../ppt/tests/test_api.py
+      - run: PYTHONPATH=. pytest ../tests/test_api.py
 
   contract:
     runs-on: ubuntu-latest
