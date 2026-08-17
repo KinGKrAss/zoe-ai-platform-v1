@@ -6,7 +6,8 @@ on:
   pull_request:
 
 jobs:
-  test:
+  z1-test:
+    name: Z1 Python Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,3 +20,50 @@ jobs:
         run: ruff check .
       - name: Tests
         run: pytest
+
+  command-center-test:
+    name: M2 Command Center
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/command-center
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: apps/command-center/package.json
+      - name: Install
+        run: npm install
+      - name: Start Command Center
+        run: node server.js > /tmp/z1-command-center.log 2>&1 &
+      - name: Wait for health endpoint
+        run: |
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3000/api/health; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/z1-command-center.log
+          exit 1
+      - name: Validate module registry
+        run: |
+          curl --fail --silent http://127.0.0.1:3000/api/modules | grep -q 'Zoë Core'
+          curl --fail --silent http://127.0.0.1:3000/api/modules | grep -q 'FORTUNA'
+          curl --fail --silent http://127.0.0.1:3000/api/modules | grep -q 'ELECTRA'
+
+  merge-gate:
+    name: Merge Gate
+    if: ${{ always() }}
+    needs: [z1-test, command-center-test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all required checks to pass
+        run: |
+          if [ "${{ needs.z1-test.result }}" != "success" ] || [ "${{ needs.command-center-test.result }}" != "success" ]; then
+            echo "Z1 merge gate failed: one or more required checks did not pass."
+            exit 1
+          fi
+          echo "Z1 merge gate passed: Python CI and M2 Command Center are green."
