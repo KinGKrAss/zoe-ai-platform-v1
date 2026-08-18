@@ -12,16 +12,14 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "0.2.0"
+        val z1ApiUrl = providers.gradleProperty("z1ApiUrl").orElse("http://10.0.2.2:8000").get()
+        buildConfigField("String", "Z1_API_BASE_URL", "\"$z1ApiUrl\"")
     }
 
-    buildFeatures {
-        buildConfig = true
-    }
+    buildFeatures { buildConfig = true }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 }
 
 dependencies {
