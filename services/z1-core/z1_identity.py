@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Mapping
 
-from .z1_uri import Z1URI, parse_z1_uri
+from z1_uri import Z1URI, parse_z1_uri
 
 
 @dataclass(frozen=True)
