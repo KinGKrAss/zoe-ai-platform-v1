@@ -7,7 +7,7 @@ connectors can replace them through Z1ResolverRegistry.register().
 
 from __future__ import annotations
 
-from .z1_resolver import Z1Resource
+from z1_resolver import Z1Resource
 
 
 def _resource(uri, resource_type: str, resource_id: str) -> Z1Resource:
