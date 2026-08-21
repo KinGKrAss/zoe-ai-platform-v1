@@ -1,4 +1,4 @@
-from services.z1_core.runtime import RuntimeStatus, Z1Runtime, can_mark_verified
+from runtime import RuntimeStatus, Z1Runtime, can_mark_verified
 
 
 def test_runtime_starts_ready():

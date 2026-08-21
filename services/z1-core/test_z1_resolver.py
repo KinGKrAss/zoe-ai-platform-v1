@@ -1,5 +1,5 @@
-from .z1_default_registry import build_core_registry
-from .z1_resolver import Z1NamespaceNotRegistered, Z1ResolverRegistry
+from z1_default_registry import build_core_registry
+from z1_resolver import Z1NamespaceNotRegistered, Z1ResolverRegistry
 
 
 def test_core_namespaces_are_registered():

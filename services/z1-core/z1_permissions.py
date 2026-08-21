@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Iterable
 
-from .z1_identity import Z1Identity
+from z1_identity import Z1Identity
 
 
 class Z1Action(str, Enum):

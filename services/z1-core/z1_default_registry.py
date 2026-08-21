@@ -1,6 +1,6 @@
 """Default Z1 namespace registry."""
 
-from .namespace_adapters import (
+from namespace_adapters import (
     resolve_3d,
     resolve_agents,
     resolve_documents,
@@ -8,7 +8,7 @@ from .namespace_adapters import (
     resolve_memory,
     resolve_ppt,
 )
-from .z1_resolver import Z1ResolverRegistry
+from z1_resolver import Z1ResolverRegistry
 
 
 def build_core_registry() -> Z1ResolverRegistry:

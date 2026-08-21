@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Callable, Mapping
 
-from .z1_uri import Z1URI, parse_z1_uri
+from z1_uri import Z1URI, parse_z1_uri
 
 
 class Z1ResolutionError(RuntimeError):

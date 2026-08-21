@@ -1,7 +1,7 @@
 import pytest
 
-from .z1_identity import Z1Identity
-from .z1_permissions import Z1Action, Z1Authorizer, Z1Policy
+from z1_identity import Z1Identity
+from z1_permissions import Z1Action, Z1Authorizer, Z1Policy
 
 
 def test_identity_is_canonicalized():
