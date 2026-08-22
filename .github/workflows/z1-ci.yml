@@ -18,4 +18,6 @@ jobs:
       - name: Ruff
         run: ruff check .
       - name: Tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}:${{ github.workspace }}/services/ppt/backend:${{ github.workspace }}/services/zoe-memory:${{ github.workspace }}/services/z1-core
         run: pytest
