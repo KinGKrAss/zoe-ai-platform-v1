@@ -23,6 +23,15 @@ jobs:
           node-version: '20'
           cache: npm
           cache-dependency-path: services/ppt/contracts/package-lock.json
+      - name: Validate production configuration
+        env:
+          PPT_ADMIN_ADDRESS: ${{ secrets.PPT_ADMIN_ADDRESS }}
+          PPT_DEPLOYER_PRIVATE_KEY: ${{ secrets.PPT_DEPLOYER_PRIVATE_KEY }}
+          PPT_RPC_URL: ${{ secrets.PPT_RPC_URL }}
+        run: |
+          test -n "$PPT_ADMIN_ADDRESS"
+          test -n "$PPT_DEPLOYER_PRIVATE_KEY"
+          test -n "$PPT_RPC_URL"
       - name: Install contract dependencies
         working-directory: services/ppt/contracts
         run: npm ci
@@ -35,5 +44,5 @@ jobs:
           PPT_ALLOW_DEPLOY: '1'
           PPT_ADMIN_ADDRESS: ${{ secrets.PPT_ADMIN_ADDRESS }}
           PRIVATE_KEY: ${{ secrets.PPT_DEPLOYER_PRIVATE_KEY }}
-          RPC_URL: ${{ secrets.PPT_RPC_URL }}
+          PPT_RPC_URL: ${{ secrets.PPT_RPC_URL }}
         run: npx hardhat run scripts/deploy.js --network production
