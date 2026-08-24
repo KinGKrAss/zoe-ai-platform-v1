@@ -1,0 +1,15 @@
+{
+  "name": "z1-command-center",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check db.js && node --check auth.js && node --check zoe-core.js && node --check mcp.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "jose": "^6.0.11",
+    "pg": "^8.16.3"
+  }
+}
