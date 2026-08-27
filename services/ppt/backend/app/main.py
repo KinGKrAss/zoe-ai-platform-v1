@@ -5,6 +5,7 @@ from decimal import Decimal
 from typing import Literal
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from .multicurrency import CurrencyRate, CurrencyRegistry, BRICS_CURRENCY_CODES
 
 app = FastAPI(title="Preussen Point API", version="2.0.0")
 TOKEN_NAME = "Preussen Point"
@@ -23,6 +24,14 @@ class PaymentQuote(BaseModel):
     amount_eur: Decimal = Field(gt=0)
     ppt_per_eur: Decimal = Field(gt=0)
 
+class MultiCurrencyQuote(BaseModel):
+    merchant_id: str = Field(min_length=1)
+    amount_eur: Decimal = Field(gt=0)
+    currency: str = Field(min_length=3, max_length=3)
+    units_per_eur: Decimal = Field(gt=0)
+    rate_source: str = Field(min_length=1)
+    rate_verified: bool = False
+
 class PaymentIntent(BaseModel):
     merchant_id: str
     amount_ppt: Decimal = Field(gt=0)
@@ -38,6 +47,8 @@ class Merchant(BaseModel):
     accepts_ppt: bool = False
     product_scope: list[str] = []
     jurisdiction_review: Literal["pending", "approved", "rejected"] = "pending"
+
+_currency_registry = CurrencyRegistry()
 
 @app.get("/health")
 def health():
@@ -69,6 +80,25 @@ def quote(request: PaymentQuote):
     return {"merchant_id": request.merchant_id, "amount_eur": str(request.amount_eur),
             "amount_ppt": str(request.amount_eur * request.ppt_per_eur),
             "price_basis": "configured_reference"}
+
+@app.post("/v1/payments/quote/multicurrency")
+def multicurrency_quote(request: MultiCurrencyQuote):
+    rate = CurrencyRate(code=request.currency.upper(), units_per_eur=request.units_per_eur,
+                        source=request.rate_source, verified=request.rate_verified)
+    _currency_registry.register(rate)
+    try:
+        amount = _currency_registry.quote_from_eur(request.amount_eur, request.currency)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    return {"merchant_id": request.merchant_id, "currency": request.currency.upper(),
+            "amount_eur": str(request.amount_eur), "settlement_amount": str(amount),
+            "rate_source": request.rate_source, "rate_verified": True,
+            "rail_group": "brics-compatible" if request.currency.upper() in BRICS_CURRENCY_CODES else "standard"}
+
+@app.get("/v1/payments/currencies")
+def currencies():
+    return {"verified_currencies": _currency_registry.supported(),
+            "configured_brics_compatible_codes": list(BRICS_CURRENCY_CODES)}
 
 @app.post("/v1/payments/intents")
 def payment_intent(intent: PaymentIntent):
