@@ -13,6 +13,6 @@ if (process.env.PPT_RPC_URL && process.env.PRIVATE_KEY) {
 
 module.exports = {
   solidity: '0.8.24',
-  paths: { sources: '.', tests: './test', cache: './cache', artifacts: './artifacts' },
+  paths: { tests: './test', cache: './cache', artifacts: './artifacts' },
   networks,
 };

@@ -5,11 +5,13 @@ from decimal import Decimal
 from typing import Literal
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from .tokenomics import TokenomicsError, TokenomicsManager
 
 app = FastAPI(title="Preussen Point API", version="2.0.0")
 TOKEN_NAME = "Preussen Point"
 TOKEN_SYMBOL = "PPT"
 TOKEN_DECIMALS = 18
+tokenomics_manager = TokenomicsManager()
 
 class ReserveSnapshot(BaseModel):
     asset: str
@@ -41,7 +43,14 @@ class Merchant(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "ppt", "version": "2.0.0"}
+    tokenomics = tokenomics_manager.current()
+    return {
+        "status": "ok",
+        "service": "ppt",
+        "version": "2.0.0",
+        "tokenomics_version": tokenomics.raw.version,
+        "tokenomics_enforcement": tokenomics_manager.enforce_integrity,
+    }
 
 @app.get("/v1/token")
 def token():
@@ -60,9 +69,10 @@ def reserve_preview(snapshot: ReserveSnapshot):
 
 @app.get("/v1/z1/summary")
 def z1_summary():
+    tokenomics = tokenomics_manager.current()
     return {"module": "FORTUNA/PPT", "token": TOKEN_SYMBOL,
             "canonical_uri": "z1://ppt/token/PPT", "minting": "manual-role-controlled",
-            "reserve_status": "unverified"}
+            "reserve_status": "unverified", "tokenomics_version": tokenomics.raw.version}
 
 @app.post("/v1/payments/quote")
 def quote(request: PaymentQuote):
@@ -86,3 +96,19 @@ def register_merchant(merchant: Merchant):
 @app.get("/v1/merchants")
 def merchants():
     return {"merchants": list(_MERCHANTS.values())}
+
+
+@app.on_event("startup")
+def startup_tokenomics():
+    try:
+        tokenomics_manager.load_initial()
+        tokenomics_manager.start_watcher()
+    except TokenomicsError:
+        raise
+    except Exception as exc:
+        raise RuntimeError(f"failed to initialize tokenomics manager: {exc}") from exc
+
+
+@app.on_event("shutdown")
+def shutdown_tokenomics():
+    tokenomics_manager.close()
