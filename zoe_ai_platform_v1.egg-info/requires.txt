@@ -1,0 +1,11 @@
+fastapi<1,>=0.116
+uvicorn[standard]<1,>=0.35
+
+[dev]
+ruff<1,>=0.12
+mypy<2,>=1.16
+
+[test]
+pytest<9,>=8.3
+httpx<1,>=0.28
+pytest-cov<7,>=5

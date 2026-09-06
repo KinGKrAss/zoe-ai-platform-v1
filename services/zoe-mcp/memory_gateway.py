@@ -6,9 +6,6 @@ import os
 from contextlib import contextmanager
 from typing import Any, Iterator
 
-import psycopg
-from psycopg.rows import dict_row
-
 
 class MemoryGateway:
     """Small, owner-scoped read boundary for trusted active memory."""
@@ -25,6 +22,11 @@ class MemoryGateway:
     def connection(self) -> Iterator[Any]:
         if not self.configured:
             raise RuntimeError("Z1 live memory is not configured")
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+        except ModuleNotFoundError as exc:
+            raise RuntimeError("psycopg is required for live memory access") from exc
         with psycopg.connect(self.database_url, row_factory=dict_row) as connection:
             yield connection
 
