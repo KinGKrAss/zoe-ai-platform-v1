@@ -21,3 +21,12 @@ The repository restores the original PPT foundation from commit `74f1d80` and ex
 - no automatic minting from market prices
 - reserve accounting is separate from token accounting
 - merchant acceptance is opt-in and jurisdiction-aware
+
+## Tokenomics policy files
+
+The backend loads `docs/tokenomics/parameters-v1.0.yaml` with hot-reload support.
+
+- integrity files: `parameters-v1.0.sha256`, `parameters-v1.0.sig`, `parameters-v1.0.pub`
+- signature format: Ed25519 detached signature over raw YAML bytes, base64 encoded
+- startup behavior: fail-closed when `TOKENOMICS_ENFORCEMENT=true`
+- reload behavior: keeps last-known-good config when validation/integrity checks fail

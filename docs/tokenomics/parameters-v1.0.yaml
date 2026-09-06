@@ -1,0 +1,41 @@
+version: "1.0.0"
+token:
+  name: "Preussen Point"
+  symbol: "PPT"
+  decimals: 18
+  initial_supply_wei: "0"
+
+collateral:
+  reserve_currency: "EUR"
+  reserve_unit: "cent"
+  min_collateral_ratio_e18: "1000000000000000000"
+  target_collateral_ratio_e18: "1050000000000000000"
+
+limits:
+  max_daily_mint_bps: 200
+  max_daily_redeem_outflow_bps: 1000
+
+fees:
+  mint_fee_bps: 10
+  redeem_fee_bps: 20
+  allocation_bps:
+    safety_reserve: 7000
+    operations: 2000
+    ecosystem: 1000
+
+risk_controls:
+  peg_deviation_threshold_bps: 200
+  reserve_staleness_max_seconds: 3600
+  oracle_staleness_max_seconds: 300
+  circuit_breaker_enabled: true
+  guarded_redeem_mode_enabled: true
+
+api:
+  require_jwt: true
+  require_idempotency_on_write: true
+  rate_limit:
+    write_per_minute: 60
+
+governance:
+  timelock_seconds: 86400
+  emergency_pause_allowed: true
