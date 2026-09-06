@@ -104,17 +104,26 @@ class ExtractionEngineV2:
     def deduplicate(self, candidates: list[MemoryCandidate]) -> list[MemoryCandidate]:
         exact: dict[str, MemoryCandidate] = {}
         for candidate in candidates:
-            exact.setdefault(candidate.dedupe_key, candidate)
+            existing = exact.get(candidate.dedupe_key)
+            if existing is None:
+                exact[candidate.dedupe_key] = candidate
+                continue
+            if candidate.candidate_type == "reconstruction" and existing.candidate_type != "reconstruction":
+                exact[candidate.dedupe_key] = candidate
 
         result: list[MemoryCandidate] = []
         for candidate in exact.values():
             duplicate = False
-            for existing in result:
+            for index, existing in enumerate(result):
                 same_thread = bool({s.conversation_id for s in candidate.source_references}
                                     & {s.conversation_id for s in existing.source_references})
-                if same_thread and SequenceMatcher(None, normalize(candidate.content), normalize(existing.content)).ratio() >= self.similarity_threshold:
-                    duplicate = True
-                    break
+                similar = SequenceMatcher(None, normalize(candidate.content), normalize(existing.content)).ratio() >= self.similarity_threshold
+                if not (same_thread and similar):
+                    continue
+                if candidate.candidate_type == "reconstruction" and existing.candidate_type != "reconstruction":
+                    result[index] = candidate
+                duplicate = True
+                break
             if not duplicate:
                 result.append(candidate)
         return result

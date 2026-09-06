@@ -8,7 +8,7 @@ Z1-specific scheme/namespace contract.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 
 class Z1URIError(ValueError):
@@ -41,8 +41,13 @@ class Z1URI:
     def uri(self) -> str:
         return urlunsplit((self.scheme, self.namespace, self.path, self.query, self.fragment))
 
-    def canonical(self) -> "Z1URI":
-        return parse_z1_uri(self.uri)
+    @property
+    def canonical(self) -> str:
+        return self.uri
+
+    @property
+    def path_segments(self) -> tuple[str, ...]:
+        return tuple(segment for segment in self.path.split("/") if segment)
 
 
 
@@ -115,9 +120,24 @@ def resolve_z1_reference(reference: str, base: str) -> Z1URI:
     if not reference:
         return base_uri
 
-    # urljoin applies the generic RFC 3986 reference resolution algorithm.
-    resolved = urljoin(base_uri.uri, reference)
-    return parse_z1_uri(resolved)
+    parts = urlsplit(reference)
+    if parts.scheme:
+        return parse_z1_uri(reference)
+
+    if reference.startswith("/"):
+        path = reference
+    else:
+        base_dir = base_uri.path if base_uri.path.endswith("/") else base_uri.path.rsplit("/", 1)[0] + "/"
+        path = f"{base_dir}{parts.path}"
+
+    normalized_path = _remove_dot_segments(path)
+    return Z1URI(
+        scheme="z1",
+        namespace=base_uri.namespace,
+        path=normalized_path,
+        query=parts.query,
+        fragment=parts.fragment,
+    )
 
 
 class Z1Resolver:

@@ -44,6 +44,9 @@ class BiometricPolicy:
     external_credential_only: bool = True
     retention_days: int | None = None
 
+    def __post_init__(self) -> None:
+        self.validate()
+
     def validate(self) -> None:
         if self.retention_days is not None and self.retention_days < 0:
             raise ValueError("retention_days must be non-negative or None")
