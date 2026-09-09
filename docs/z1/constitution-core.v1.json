@@ -1,0 +1,91 @@
+{
+  "constitution_id": "PREUSSEN-NRW-2026",
+  "version": "1.0.0",
+  "status": "project_specification",
+  "authority_model": {
+    "principle": "No model, agent or digital system is above the constitution",
+    "human_responsibility": true,
+    "judicial_independence": true,
+    "ai_sovereign_effect_without_human_legal_basis": false
+  },
+  "pillars": [
+    "human_dignity_and_rights",
+    "rule_of_law",
+    "peace_and_life_protection",
+    "common_good",
+    "responsible_technology_and_ai"
+  ],
+  "constitutional_ranges": [
+    {"articles":"1-36","domain":"fundamental_rights_and_freedoms"},
+    {"articles":"37-50","domain":"social_and_common_good_rights"},
+    {"articles":"51-53","domain":"constitutional_rank_and_humanitarian_defense"},
+    {"articles":"54-65","domain":"state_leadership_and_government"},
+    {"articles":"66-71","domain":"humanitarian_state_and_peace_order"},
+    {"articles":"72-75","domain":"judiciary_and_constitutional_review"},
+    {"articles":"76-80","domain":"peace_and_modern_state_order"},
+    {"articles":"81-93","domain":"administration_ai_and_control"}
+  ],
+  "ai_governance": {
+    "allowed": [
+      "legal_research",
+      "precedent_comparison",
+      "contradiction_detection",
+      "administrative_review",
+      "draft_preparation",
+      "judicial_decision_support",
+      "budget_analysis",
+      "scientific_and_technical_advice",
+      "crisis_and_disaster_planning"
+    ],
+    "prohibited": [
+      "self_granted_sovereign_power",
+      "bypass_of_required_human_approval",
+      "bypass_of_countersignature",
+      "replacement_of_independent_judges",
+      "override_of_fundamental_rights",
+      "override_of_the_constitution"
+    ],
+    "objection_policy": {
+      "may_flag_legal_risk": true,
+      "must_document_reason": true,
+      "may_suspend_only_when_explicitly_authorized": true,
+      "is_political_countergovernment": false
+    }
+  },
+  "council_of_33": {
+    "enabled": true,
+    "identity_required": true,
+    "role_required": true,
+    "capabilities_required": true,
+    "permissions_required": true,
+    "governance_policy_required": true,
+    "audit_scope_required": true,
+    "agent_id_distinct_from_model_id": true
+  },
+  "justitia": {
+    "role": "legal_analysis_and_decision_support",
+    "judge_replacement": false,
+    "precedent_analysis": true,
+    "conflict_detection": true,
+    "draft_generation": true
+  },
+  "z1_invariants": [
+    "Z1_OWNS_STATE",
+    "ZOE_INTERPRETS_STATE",
+    "MCP_TRANSPORTS_AND_ORCHESTRATES",
+    "MODELS_PROVIDE_INFERENCE",
+    "HUMANS_RETAIN_LEGAL_RESPONSIBILITY",
+    "ALL_SIGNIFICANT_ACTIONS_ARE_AUDITABLE"
+  ],
+  "implementation_targets": [
+    "constitution_registry",
+    "constitutional_article_store",
+    "constitutional_policy_engine",
+    "ai_authority_guard",
+    "countersignature_guard",
+    "constitutional_audit_log",
+    "justitia_legal_analysis_service",
+    "council_of_33_registry"
+  ],
+  "motto": "Technologie im Dienste des Menschen, Recht im Dienste der Gerechtigkeit und staatliche Macht im Dienste des Gemeinwohls."
+}
