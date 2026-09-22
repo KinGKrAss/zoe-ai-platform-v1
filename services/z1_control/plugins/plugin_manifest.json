@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0",
+  "policy": {
+    "auto_install": true,
+    "auto_update": true,
+    "require_allowlist": true,
+    "require_signature": true,
+    "require_z1_authorization": true,
+    "allow_prerelease": false
+  },
+  "plugins": []
+}
