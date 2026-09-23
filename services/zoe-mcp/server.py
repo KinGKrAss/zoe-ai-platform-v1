@@ -12,7 +12,7 @@ import os
 from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from orchestration.audit import z1_audit
 from orchestration.models import TaskEnvelope
@@ -92,7 +92,7 @@ class OrchestrationRequest(BaseModel):
     conversation_id: str | None = None
     parent_task_id: str | None = None
     tenant_id: str = "default"
-    metadata: dict[str, Any] = {}
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 @app.post("/v1/orchestrate")
