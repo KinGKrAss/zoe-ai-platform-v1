@@ -41,7 +41,15 @@ jobs:
 
       - name: Verify critical Z1 tables
         run: |
-          docker compose exec -T zoe-postgres psql -U zoe -d zoe -v ON_ERROR_STOP=1 -c "SELECT to_regclass('public.zoe_identity'), to_regclass('public.zoe_memory'), to_regclass('public.zoe_memory_embeddings'), to_regclass('public.z1_users'), to_regclass('public.z1_roles'), to_regclass('public.z1_permissions'), to_regclass('public.audit_log');"
+          test "$(docker compose exec -T zoe-postgres psql -U zoe -d zoe -tAc "SELECT COUNT(*) = 7 FROM (VALUES
+            (to_regclass('public.zoe_identity')),
+            (to_regclass('public.zoe_memory')),
+            (to_regclass('public.zoe_memory_embeddings')),
+            (to_regclass('public.z1_users')),
+            (to_regclass('public.z1_roles')),
+            (to_regclass('public.z1_permissions')),
+            (to_regclass('public.audit_log'))
+          ) AS required(table_ref) WHERE table_ref IS NOT NULL")" = "t"
 
       - name: Verify Zoë identity seed
         run: |
