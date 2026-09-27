@@ -11,7 +11,7 @@ COPY services ./services
 COPY docs ./docs
 
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir fastapi 'uvicorn[standard]'
+    && pip install --no-cache-dir .
 
 EXPOSE 8080
 
