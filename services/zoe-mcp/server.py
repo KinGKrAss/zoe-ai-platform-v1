@@ -12,12 +12,19 @@ import os
 from typing import Any
 
 from fastapi import FastAPI, Header, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+
+from orchestration.audit import z1_audit
+from orchestration.models import TaskEnvelope
+from orchestration.orchestrator import Orchestrator
+from orchestration.providers import ProviderError, build_provider_registry
 
 app = FastAPI(title="Zoë MCP Bridge", version="0.1.0")
 
 ZOE_ID = os.getenv("ZOE_AGENT_ID", "zoe-core")
 Z1_RUNTIME = os.getenv("Z1_RUNTIME_VERSION", "unknown")
+ORCHESTRATOR_TOKEN = os.getenv("Z1_ORCHESTRATOR_TOKEN")
+ORCHESTRATOR = Orchestrator(build_provider_registry(), audit=z1_audit)
 
 
 class ToolCall(BaseModel):
@@ -38,7 +45,8 @@ def mcp_info() -> dict[str, Any]:
         "version": "0.1.0",
         "agent_id": ZOE_ID,
         "protocol": "MCP",
-        "status": "scaffold",
+        "status": "ready" if ORCHESTRATOR.providers else "waiting_for_provider_credentials",
+        "providers": sorted(ORCHESTRATOR.providers),
     }
 
 
@@ -75,3 +83,40 @@ def tools_call(call: ToolCall, authorization: str | None = Header(default=None))
             ]
         }
     raise HTTPException(status_code=404, detail="Unknown or disabled tool")
+
+
+class OrchestrationRequest(BaseModel):
+    task: str
+    provider_id: str | None = None
+    model_id: str | None = None
+    conversation_id: str | None = None
+    parent_task_id: str | None = None
+    tenant_id: str = "default"
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+@app.post("/v1/orchestrate")
+async def orchestrate(req: OrchestrationRequest, authorization: str | None = Header(default=None)) -> dict[str, Any]:
+    """Dispatch one auditable task to a configured AI provider."""
+    if not ORCHESTRATOR_TOKEN:
+        raise HTTPException(status_code=503, detail="Z1_ORCHESTRATOR_TOKEN is not configured")
+    supplied = authorization.removeprefix("Bearer ").strip() if authorization else ""
+    if not supplied or supplied != ORCHESTRATOR_TOKEN:
+        raise HTTPException(status_code=401, detail="Orchestrator bearer token required")
+    envelope = TaskEnvelope.create(
+        req.task, provider_id=req.provider_id, model_id=req.model_id,
+        conversation_id=req.conversation_id, parent_task_id=req.parent_task_id,
+        tenant_id=req.tenant_id, metadata=req.metadata,
+    )
+    try:
+        result = await ORCHESTRATOR.dispatch(envelope)
+    except ProviderError as exc:
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    return {
+        "task_id": result.task_id,
+        "provider_id": result.provider_id,
+        "model_id": result.model_id,
+        "status": result.status,
+        "text": result.text,
+        "metadata": result.metadata,
+    }
