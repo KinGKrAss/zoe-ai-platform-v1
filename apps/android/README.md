@@ -1,24 +1,29 @@
-# Z1 Android Client
+# Zoë / Z1 Android client
 
-Android client surface for the Z1 Real Estate Command Center, Zoë, FORTUNA and Preussen Point (PPT).
+The Android app is a client-only adapter for Z1.
 
-## Android Skills
+## Architecture
 
-Use the official Android Skills set for Android-specific implementation and validation. Install with:
+`Android → Z1 API → internal Z1 services`
+
+The Android client must not access PostgreSQL directly and must not contain provider or model API secrets.
+
+## Local build
+
+Use Java 17, Android SDK 35 and Gradle 8.9:
 
 ```bash
-./tools/install-android-skills.sh
+gradle -p apps/android assembleDebug
 ```
 
-The project is designed to support Android AppFunctions for safe, agent-discoverable workflows. Financially privileged PPT operations stay behind authenticated Z1/FORTUNA APIs and explicit confirmation.
+For a connected Z1 API, pass the HTTPS endpoint as a Gradle property:
 
-## Initial PPT workflows
+```bash
+gradle -p apps/android -PZ1_API_BASE_URL=https://your-z1-host assembleDebug
+```
 
-- `getPptTokenInfo`
-- `getPptBalance`
-- `getPptReserveStatus`
-- `getPptTransactionHistory`
-- `previewPptOperation`
-- `openPptDashboard`
+The app rejects non-HTTPS Z1 API endpoints.
 
-These are read/preview workflows. Actual mint, burn, reserve administration, and signing require privileged backend authorization.
+## Session credentials
+
+Session tokens are stored using an AES-GCM key held by the Android Keystore. The app does not put credentials into source code or the Android manifest.
