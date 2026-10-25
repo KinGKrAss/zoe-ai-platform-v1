@@ -202,6 +202,9 @@ def _init_db() -> None:
                 reporting_date TEXT NOT NULL,
                 balance_nominal TEXT NOT NULL,
                 currency_code TEXT NOT NULL CHECK (length(currency_code) = 3),
+                valuation_eur TEXT,
+                fx_rate_to_eur TEXT,
+                fx_source TEXT,
                 q1_return_nominal TEXT,
                 q1_period_start TEXT,
                 q1_period_end TEXT,
@@ -220,6 +223,11 @@ def _init_db() -> None:
                 verified_by TEXT,
                 verified_at TEXT,
                 created_at TEXT NOT NULL,
+                CHECK (asset_class NOT IN ('crypto_asset','token') OR quantity_nominal IS NOT NULL),
+                CHECK (
+                    (valuation_eur IS NULL AND fx_rate_to_eur IS NULL AND fx_source IS NULL)
+                    OR (valuation_eur IS NOT NULL AND fx_rate_to_eur IS NOT NULL AND fx_source IS NOT NULL)
+                ),
                 CHECK (verification_status <> 'VERIFIED' OR (verified_by IS NOT NULL AND verified_at IS NOT NULL))
             );
             CREATE INDEX IF NOT EXISTS idx_fortuna_int_property_country_date
@@ -507,14 +515,20 @@ def create_ppt_midas_entry(
         db.execute(
             """INSERT INTO z1_fortuna_ppt_midas_entries
                (id, custody_type, custody_reference, public_wallet_address, asset_class,
-                chain_id, reporting_date, balance_nominal, currency_code, q1_return_nominal,
+                asset_symbol, quantity_nominal, chain_id, reporting_date, balance_nominal,
+                currency_code, valuation_eur, fx_rate_to_eur, fx_source, q1_return_nominal,
                 q1_period_start, q1_period_end, evidence_reference, document_hash, storage_key,
                 transaction_reference, verification_status, audit_notes, created_by, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', ?, ?, ?)""",
             (
                 record_id, p.custody_type, p.custody_reference, p.public_wallet_address,
-                p.asset_class, p.chain_id, p.reporting_date.isoformat(), str(p.balance_nominal),
+                p.asset_class, p.asset_symbol,
+                str(p.quantity_nominal) if p.quantity_nominal is not None else None,
+                p.chain_id, p.reporting_date.isoformat(), str(p.balance_nominal),
                 p.currency_code,
+                str(p.valuation_eur) if p.valuation_eur is not None else None,
+                str(p.fx_rate_to_eur) if p.fx_rate_to_eur is not None else None,
+                p.fx_source,
                 str(p.q1_return_nominal) if p.q1_return_nominal is not None else None,
                 p.q1_period_start.isoformat() if p.q1_period_start else None,
                 p.q1_period_end.isoformat() if p.q1_period_end else None,
