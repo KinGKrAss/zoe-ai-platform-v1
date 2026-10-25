@@ -183,6 +183,9 @@ def _init_db() -> None:
                 record_status TEXT NOT NULL DEFAULT 'SUBMITTED'
                     CHECK (record_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT')),
                 created_by TEXT NOT NULL,
+                verified_by TEXT,
+                verified_at TEXT,
+
                 created_at TEXT NOT NULL
             );
             CREATE TABLE IF NOT EXISTS z1_fortuna_ppt_midas_entries (
@@ -214,6 +217,9 @@ def _init_db() -> None:
                     CHECK (verification_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT')),
                 audit_notes TEXT,
                 created_by TEXT NOT NULL,
+                verified_by TEXT,
+                verified_at TEXT,
+
                 created_at TEXT NOT NULL
             );
             CREATE INDEX IF NOT EXISTS idx_fortuna_int_property_country_date
