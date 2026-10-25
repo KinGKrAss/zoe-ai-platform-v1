@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS z1_fortuna_international_properties (
   storage_key              VARCHAR(128),
   record_status            VARCHAR(24) NOT NULL DEFAULT 'SUBMITTED',
   created_by               VARCHAR(200) NOT NULL,
+  verified_by              VARCHAR(200),
+  verified_at              TIMESTAMPTZ,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT z1_fortuna_int_property_country_check
     CHECK (country_code ~ '^[A-Z]{2}$'),
@@ -38,7 +40,9 @@ CREATE TABLE IF NOT EXISTS z1_fortuna_international_properties (
       (valuation_eur IS NOT NULL AND fx_rate_to_eur > 0 AND fx_source IS NOT NULL)
     ),
   CONSTRAINT z1_fortuna_int_property_status_check
-    CHECK (record_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT'))
+    CHECK (record_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT')),
+  CONSTRAINT z1_fortuna_int_property_verified_metadata_check
+    CHECK (record_status <> 'VERIFIED' OR (verified_by IS NOT NULL AND verified_at IS NOT NULL))
 );
 
 CREATE TABLE IF NOT EXISTS z1_fortuna_ppt_midas_entries (
@@ -47,6 +51,7 @@ CREATE TABLE IF NOT EXISTS z1_fortuna_ppt_midas_entries (
   custody_reference        VARCHAR(255) NOT NULL,
   asset_class              VARCHAR(40) NOT NULL,
   chain_id                 VARCHAR(120),
+  public_wallet_address    VARCHAR(255),
   reporting_date           DATE NOT NULL,
   balance_nominal          NUMERIC(32, 12) NOT NULL CHECK (balance_nominal >= 0),
   currency_code            CHAR(3) NOT NULL,
@@ -60,6 +65,8 @@ CREATE TABLE IF NOT EXISTS z1_fortuna_ppt_midas_entries (
   verification_status      VARCHAR(24) NOT NULL DEFAULT 'SUBMITTED',
   audit_notes              TEXT,
   created_by               VARCHAR(200) NOT NULL,
+  verified_by              VARCHAR(200),
+  verified_at              TIMESTAMPTZ,
   created_at               TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT z1_fortuna_ppt_custody_type_check
     CHECK (custody_type IN ('bank','custodian','onchain_wallet','other')),
@@ -79,7 +86,9 @@ CREATE TABLE IF NOT EXISTS z1_fortuna_ppt_midas_entries (
        AND q1_period_end IS NOT NULL AND q1_period_end >= q1_period_start)
     ),
   CONSTRAINT z1_fortuna_ppt_status_check
-    CHECK (verification_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT'))
+    CHECK (verification_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT')),
+  CONSTRAINT z1_fortuna_ppt_verified_metadata_check
+    CHECK (verification_status <> 'VERIFIED' OR (verified_by IS NOT NULL AND verified_at IS NOT NULL))
 );
 
 CREATE INDEX IF NOT EXISTS idx_z1_fortuna_int_property_country_date
