@@ -9,6 +9,11 @@ Permissioned connectors to external systems. Zoë never accesses external system
 | `postgresql/` | PostgreSQL / Z1 Database | Property, financial, and asset data |
 | `github/` | GitHub | Repository analysis, issues, pull requests |
 | `terrabox/` | Terra Box | Document management and PDF analysis |
+| `openai_responses.py` | OpenAI Responses API | Server-side language-model inference for ZOE BRAIN |
+
+The OpenAI connector is an inference adapter. It does not store identity or memory, and it does not execute tool calls. Z1's permissioned tool router remains responsible for all actions.
+
+Configure it with the server environment variables documented in [OpenAI integration setup](../../integrations/openai/README.md). Never put an API key in a mobile app, browser bundle, or repository.
 
 ## Permission model
 
