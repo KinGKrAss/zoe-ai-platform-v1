@@ -107,7 +107,7 @@ class PPTMidasEntryCreate(BaseModel):
     @classmethod
     def reject_full_iban(cls, value: str) -> str:
         compact = value.replace(" ", "").upper()
-        if re.fullmatch(r"[A-Z]{2}\\d{2}[A-Z0-9]{11,30}", compact):
+        if re.fullmatch(r"[A-Z]{2}\d{2}[A-Z0-9]{11,30}", compact):
             raise ValueError("Use an opaque custody alias; do not store a full IBAN")
         return value.strip()
 
