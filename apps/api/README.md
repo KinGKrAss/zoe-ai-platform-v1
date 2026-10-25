@@ -84,6 +84,22 @@ The endpoint stores the hash and observations but does not upload or display the
 
 The PostgreSQL schema is in `database/migrations/017_create_z1_ownership_proofs.sql`. The runnable development endpoint currently uses SQLite; a production PostgreSQL repository adapter and authorized verification workflow are not included here.
 
+
+## International property and PPT/MIDAS registers
+
+The development API provides authenticated submission and read routes:
+
+- `POST/GET /v1/fortuna/international-properties`
+- `POST/GET /v1/fortuna/ppt-midas-entries`
+
+International property entries capture country, legal entity, local valuation and currency, reporting date, ownership share, and optional EUR valuation with FX rate and source. PPT/MIDAS entries capture custody type, an opaque custody reference, asset class, reporting date, nominal balance, currency, and optional Q1 return with its period. On-chain entries require a chain identifier and public wallet address.
+
+Every submitted record is stored as `SUBMITTED`. The API does not accept a client-supplied verified status. A document hash or source reference does not prove ownership, balance, signature validity, or authenticity. Full IBANs, credentials, and API keys must not be entered as custody references. Use a non-secret internal alias; public wallet addresses may be recorded for on-chain entries.
+
+The global Q1 presentation figure for PPT/MIDAS is not automatically split into invented custodians or wallets. The 31 existing GAIA property entries are recorded as user claims with unverified references; they are not confirmed ownership records and are not copied into this new international register. International records must be submitted from specific country, entity, valuation, and source data.
+
+The production PostgreSQL schema is `database/migrations/018_create_z1_fortuna_international_registers.sql`. The runnable API stores records in SQLite. A production PostgreSQL repository adapter and independent verification workflow are not included.
+
 ## Security boundary
 
 - API access is fail-closed when `Z1_API_TOKEN` is missing.
