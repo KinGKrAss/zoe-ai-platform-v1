@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 from decimal import Decimal
+import re
 from typing import Literal
 from uuid import UUID
 
@@ -101,6 +102,14 @@ class PPTMidasEntryCreate(BaseModel):
     @classmethod
     def normalize_currency_code(cls, value: str) -> str:
         return value.upper()
+
+    @field_validator("custody_reference")
+    @classmethod
+    def reject_full_iban(cls, value: str) -> str:
+        compact = value.replace(" ", "").upper()
+        if re.fullmatch(r"[A-Z]{2}\\d{2}[A-Z0-9]{11,30}", compact):
+            raise ValueError("Use an opaque custody alias; do not store a full IBAN")
+        return value.strip()
 
     @model_validator(mode="after")
     def validate_custody_and_period(self) -> "PPTMidasEntryCreate":
