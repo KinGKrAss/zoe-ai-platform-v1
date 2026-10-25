@@ -20,6 +20,11 @@ from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from pydantic import BaseModel, Field
+from apps.api.ownership import (
+    OwnershipObservationResponse,
+    OwnershipProofCreate,
+    OwnershipProofResponse,
+)
 
 APP_VERSION = "1.0.0"
 DEFAULT_DB = Path(os.getenv("Z1_DEV_DB", ".z1/z1-dev.sqlite3"))
@@ -89,6 +94,66 @@ def _init_db() -> None:
                 result TEXT NOT NULL,
                 created_at TEXT NOT NULL
             );
+            CREATE TABLE IF NOT EXISTS z1_ownership_evidence (
+                id TEXT PRIMARY KEY,
+                asset_id TEXT NOT NULL REFERENCES z1_assets(id) ON DELETE CASCADE,
+                document_hash TEXT NOT NULL CHECK (
+                    length(document_hash) = 64 AND document_hash NOT GLOB '*[^0-9a-f]*'
+                ),
+                source_reference TEXT,
+                storage_key TEXT,
+                status TEXT NOT NULL DEFAULT 'PENDING'
+                    CHECK (status IN ('PENDING','VERIFIED','REJECTED','SUPERSEDED')),
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS z1_ownership_proofs (
+                id TEXT PRIMARY KEY,
+                asset_id TEXT NOT NULL REFERENCES z1_assets(id) ON DELETE CASCADE,
+                evidence_id TEXT NOT NULL UNIQUE REFERENCES z1_ownership_evidence(id) ON DELETE CASCADE,
+                claimant_id TEXT NOT NULL,
+                claimed_owner TEXT NOT NULL,
+                ownership_claim TEXT NOT NULL,
+                document_type TEXT NOT NULL CHECK (
+                    document_type IN (
+                        'grundbuchauszug','handelsregister','kaufvertrag','fahrzeugbrief',
+                        'erc721','kontoauszug','sonstiger_nachweis'
+                    )
+                ),
+                reference_number TEXT,
+                verification_status TEXT NOT NULL DEFAULT 'SUBMITTED'
+                    CHECK (verification_status IN (
+                        'SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT'
+                    )),
+                notes TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS z1_ownership_proof_observations (
+                id TEXT PRIMARY KEY,
+                proof_id TEXT NOT NULL REFERENCES z1_ownership_proofs(id) ON DELETE CASCADE,
+                observation_kind TEXT NOT NULL CHECK (
+                    observation_kind IN ('value','signature','seal')
+                ),
+                label TEXT NOT NULL,
+                observed_text TEXT NOT NULL,
+                interpreted_meaning TEXT,
+                normalized_value TEXT,
+                page_number INTEGER CHECK (page_number IS NULL OR page_number > 0),
+                extraction_method TEXT NOT NULL CHECK (
+                    extraction_method IN ('manual','ocr','metadata')
+                ),
+                review_status TEXT NOT NULL DEFAULT 'UNREVIEWED' CHECK (
+                    review_status IN ('UNREVIEWED','CONFIRMED','DISPUTED','REJECTED')
+                ),
+                reviewed_by TEXT,
+                reviewed_at TEXT,
+                review_notes TEXT,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_ownership_proofs_asset
+                ON z1_ownership_proofs(asset_id, created_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_ownership_observations_proof
+                ON z1_ownership_proof_observations(proof_id, page_number);
             """
         )
         db.commit()
@@ -201,3 +266,99 @@ def get_asset(asset_id: str, actor: str = Depends(require_auth)) -> Asset:
 def content_fingerprint(text: str) -> str:
     """Return a deterministic fingerprint for audit/provenance without storing source content."""
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+@app.post(
+    "/v1/ownership/proofs",
+    response_model=OwnershipProofResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def register_ownership_proof(
+    payload: OwnershipProofCreate,
+    actor: str = Depends(require_auth),
+) -> OwnershipProofResponse:
+    """Record a submitted ownership claim and page-referenced observations.
+
+    Submission does not verify the document, its signatures, its seals, or the claim.
+    """
+    proof_id = str(uuid.uuid4())
+    evidence_id = str(uuid.uuid4())
+    asset_id = str(payload.asset_id)
+    created_at = datetime.now(timezone.utc).isoformat()
+
+    with closing(_connect()) as db:
+        asset = db.execute(
+            "SELECT uri FROM z1_assets WHERE id = ?",
+            (asset_id,),
+        ).fetchone()
+        if asset is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Asset not found")
+
+        db.execute(
+            """INSERT INTO z1_ownership_evidence
+               (id, asset_id, document_hash, source_reference, storage_key, status, created_at)
+               VALUES (?, ?, ?, ?, ?, 'PENDING', ?)""",
+            (
+                evidence_id,
+                asset_id,
+                payload.document_hash,
+                payload.reference_number,
+                payload.storage_key,
+                created_at,
+            ),
+        )
+        db.execute(
+            """INSERT INTO z1_ownership_proofs
+               (id, asset_id, evidence_id, claimant_id, claimed_owner, ownership_claim,
+                document_type, reference_number, verification_status, notes, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', ?, ?, ?)""",
+            (
+                proof_id,
+                asset_id,
+                evidence_id,
+                actor,
+                payload.claimed_owner,
+                payload.ownership_claim,
+                payload.document_type,
+                payload.reference_number,
+                payload.notes,
+                created_at,
+                created_at,
+            ),
+        )
+        for observation in payload.observations:
+            db.execute(
+                """INSERT INTO z1_ownership_proof_observations
+                   (id, proof_id, observation_kind, label, observed_text, interpreted_meaning,
+                    normalized_value, page_number, extraction_method, review_status, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'UNREVIEWED', ?)""",
+                (
+                    str(uuid.uuid4()),
+                    proof_id,
+                    observation.observation_kind,
+                    observation.label,
+                    observation.observed_text,
+                    observation.interpreted_meaning,
+                    observation.normalized_value,
+                    observation.page_number,
+                    observation.extraction_method,
+                    created_at,
+                ),
+            )
+        db.commit()
+
+    proof_uri = f"z1://wealth/assets/{asset_id}/ownership-proofs/{proof_id}"
+    _audit(actor, "ownership.proof.submit", proof_uri, "accepted")
+    response_observations = [
+        OwnershipObservationResponse(**item.model_dump(), review_status="UNREVIEWED")
+        for item in payload.observations
+    ]
+    return OwnershipProofResponse(
+        id=proof_id,
+        evidence_id=evidence_id,
+        claimant_id=actor,
+        verification_status="SUBMITTED",
+        created_at=created_at,
+        observations=response_observations,
+        **payload.model_dump(exclude={"observations"}),
+    )
