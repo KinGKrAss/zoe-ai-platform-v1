@@ -198,6 +198,8 @@ def _init_db() -> None:
                 asset_class TEXT NOT NULL CHECK (
                     asset_class IN ('fiat_pool','crypto_asset','token','yield_accrual','other')
                 ),
+                asset_symbol TEXT NOT NULL,
+                quantity_nominal TEXT,
                 chain_id TEXT,
                 reporting_date TEXT NOT NULL,
                 balance_nominal TEXT NOT NULL,
