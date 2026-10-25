@@ -92,7 +92,7 @@ The development API provides authenticated submission and read routes:
 - `POST/GET /v1/fortuna/international-properties`
 - `POST/GET /v1/fortuna/ppt-midas-entries`
 
-International property entries capture country, legal entity, local valuation and currency, reporting date, ownership share, and optional EUR valuation with FX rate and source. PPT/MIDAS entries capture custody type, an opaque custody reference, asset class, reporting date, nominal balance, currency, and optional Q1 return with its period. On-chain entries require a chain identifier and public wallet address.
+International property entries capture country, legal entity, local valuation and currency, reporting date, ownership share, and optional EUR valuation with FX rate and source. PPT/MIDAS entries capture custody type, an opaque custody reference, asset class and symbol, reporting date, nominal balance, currency, optional token quantity, and optional Q1 return with its period. A foreign-currency EUR valuation requires its FX rate and named source. On-chain entries require a chain identifier and public wallet address.
 
 Every submitted record is stored as `SUBMITTED`. The API does not accept a client-supplied verified status. A document hash or source reference does not prove ownership, balance, signature validity, or authenticity. Full IBANs, credentials, and API keys must not be entered as custody references. Use a non-secret internal alias; public wallet addresses may be recorded for on-chain entries.
 
