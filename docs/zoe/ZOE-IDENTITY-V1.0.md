@@ -52,7 +52,12 @@
 | ZOE MEMORY (zoe-memory) | Identity, episodic memory and knowledge storage |
 | ZOE TOOLS | Permissioned tool system for all system interactions |
 | Z1 Integration Layer | Mediated access to PostgreSQL, GitHub, Terra Box |
+| OpenAI Responses connector | Optional backend inference provider called by ZOE BRAIN; the model receives only the instructions and context Z1 passes to it |
 | Council of 33 | Network of specialist agents Zoë orchestrates |
+
+### Runtime implementation boundary
+
+The OpenAI connector at `services/zoe_connectors/openai_responses.py` provides model inference through the Responses API. It does not contain Zoë's persistent identity or memory. Z1 must load the active identity and permission-filtered context, then pass them as instructions and input for each request. Tool execution and audit logging remain in Z1.
 
 ---
 
