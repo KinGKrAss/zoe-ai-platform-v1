@@ -12,6 +12,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 CustodyType = Literal["bank", "custodian", "onchain_wallet", "other"]
 AssetClass = Literal["fiat_pool", "crypto_asset", "token", "yield_accrual", "other"]
+VerificationStatus = Literal["SUBMITTED", "INCOMPLETE", "UNDER_REVIEW", "VERIFIED", "REJECTED", "CONFLICT"]
 
 
 class InternationalPropertyCreate(BaseModel):
@@ -58,8 +59,10 @@ class InternationalPropertyCreate(BaseModel):
 
 class InternationalPropertyResponse(InternationalPropertyCreate):
     id: UUID
-    record_status: Literal["SUBMITTED"] = "SUBMITTED"
+    record_status: VerificationStatus = "SUBMITTED"
     created_by: str
+    verified_by: str | None = None
+    verified_at: datetime | None = None
     created_at: datetime
 
 
@@ -110,6 +113,8 @@ class PPTMidasEntryCreate(BaseModel):
 
 class PPTMidasEntryResponse(PPTMidasEntryCreate):
     id: UUID
-    verification_status: Literal["SUBMITTED"] = "SUBMITTED"
+    verification_status: VerificationStatus = "SUBMITTED"
     created_by: str
+    verified_by: str | None = None
+    verified_at: datetime | None = None
     created_at: datetime
