@@ -36,6 +36,14 @@ PPT/Z1 attribution is a separate evidence claim. It must never be inferred merel
 
 `UNVERIFIED_EXTERNAL_ADDRESS` is represented operationally as `PENDING` until the verification engine has produced evidence. A successful run persists check evidence, source, timestamp and audit information; the derived view then exposes `VERIFIED`.
 
+## Ownership document evidence
+
+The FORTUNA ownership proof endpoint records a claimant's document hash and page-referenced observations of visible values, signatures, and seals. These observations preserve what was reported or transcribed; their `UNREVIEWED` status means their interpretation is not established as fact.
+
+A SHA-256 hash can show that a later file matches the hashed bytes. It does not prove who issued or signed the document, that a seal is genuine, or that the document establishes ownership. Those conclusions require a separate review against authoritative sources and applicable procedures.
+
+Proof submissions stay `SUBMITTED`; submitting a claim or an observation cannot assign `VERIFIED`. The development API has no authorized verification operation or production PostgreSQL repository adapter yet.
+
 ## UI contract
 
 The Command Center must read `derived_status` from `z1_verification_state`. It must not maintain a second status truth in frontend state.
