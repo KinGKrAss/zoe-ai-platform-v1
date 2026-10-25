@@ -25,6 +25,12 @@ from apps.api.ownership import (
     OwnershipProofCreate,
     OwnershipProofResponse,
 )
+from apps.api.fortuna_audit import (
+    InternationalPropertyCreate,
+    InternationalPropertyResponse,
+    PPTMidasEntryCreate,
+    PPTMidasEntryResponse,
+)
 
 APP_VERSION = "1.0.0"
 DEFAULT_DB = Path(os.getenv("Z1_DEV_DB", ".z1/z1-dev.sqlite3"))
@@ -154,6 +160,66 @@ def _init_db() -> None:
                 ON z1_ownership_proofs(asset_id, created_at DESC);
             CREATE INDEX IF NOT EXISTS idx_ownership_observations_proof
                 ON z1_ownership_proof_observations(proof_id, page_number);
+            CREATE TABLE IF NOT EXISTS z1_fortuna_international_properties (
+                id TEXT PRIMARY KEY,
+                property_name TEXT NOT NULL,
+                country_code TEXT NOT NULL CHECK (length(country_code) = 2),
+                legal_entity TEXT NOT NULL,
+                local_tax_id TEXT,
+                valuation_local_currency TEXT NOT NULL,
+                currency_code TEXT NOT NULL CHECK (length(currency_code) = 3),
+                valuation_eur TEXT,
+                fx_rate_to_eur TEXT,
+                fx_source TEXT,
+                ownership_share_percent TEXT NOT NULL,
+                reporting_date TEXT NOT NULL,
+                evidence_reference TEXT,
+                document_hash TEXT CHECK (
+                    document_hash IS NULL OR (
+                        length(document_hash) = 64 AND document_hash NOT GLOB '*[^0-9a-f]*'
+                    )
+                ),
+                storage_key TEXT,
+                record_status TEXT NOT NULL DEFAULT 'SUBMITTED'
+                    CHECK (record_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT')),
+                created_by TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS z1_fortuna_ppt_midas_entries (
+                id TEXT PRIMARY KEY,
+                custody_type TEXT NOT NULL CHECK (
+                    custody_type IN ('bank','custodian','onchain_wallet','other')
+                ),
+                custody_reference TEXT NOT NULL,
+                public_wallet_address TEXT,
+                asset_class TEXT NOT NULL CHECK (
+                    asset_class IN ('fiat_pool','crypto_asset','token','yield_accrual','other')
+                ),
+                chain_id TEXT,
+                reporting_date TEXT NOT NULL,
+                balance_nominal TEXT NOT NULL,
+                currency_code TEXT NOT NULL CHECK (length(currency_code) = 3),
+                q1_return_nominal TEXT,
+                q1_period_start TEXT,
+                q1_period_end TEXT,
+                evidence_reference TEXT,
+                document_hash TEXT CHECK (
+                    document_hash IS NULL OR (
+                        length(document_hash) = 64 AND document_hash NOT GLOB '*[^0-9a-f]*'
+                    )
+                ),
+                storage_key TEXT,
+                transaction_reference TEXT,
+                verification_status TEXT NOT NULL DEFAULT 'SUBMITTED'
+                    CHECK (verification_status IN ('SUBMITTED','INCOMPLETE','UNDER_REVIEW','VERIFIED','REJECTED','CONFLICT')),
+                audit_notes TEXT,
+                created_by TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_fortuna_int_property_country_date
+                ON z1_fortuna_international_properties(country_code, reporting_date DESC);
+            CREATE INDEX IF NOT EXISTS idx_fortuna_ppt_custody_date
+                ON z1_fortuna_ppt_midas_entries(custody_reference, reporting_date DESC);
             """
         )
         db.commit()
@@ -362,3 +428,114 @@ def register_ownership_proof(
         observations=response_observations,
         **payload.model_dump(exclude={"observations"}),
     )
+
+@app.post(
+    "/v1/fortuna/international-properties",
+    response_model=InternationalPropertyResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_international_property(
+    payload: InternationalPropertyCreate,
+    actor: str = Depends(require_auth),
+) -> InternationalPropertyResponse:
+    """Record a submitted international property claim and dated valuation."""
+    record_id = str(uuid.uuid4())
+    created_at = datetime.now(timezone.utc).isoformat()
+    p = payload
+    with closing(_connect()) as db:
+        db.execute(
+            """INSERT INTO z1_fortuna_international_properties
+               (id, property_name, country_code, legal_entity, local_tax_id,
+                valuation_local_currency, currency_code, valuation_eur, fx_rate_to_eur,
+                fx_source, ownership_share_percent, reporting_date, evidence_reference,
+                document_hash, storage_key, record_status, created_by, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', ?, ?)""",
+            (
+                record_id, p.property_name, p.country_code, p.legal_entity, p.local_tax_id,
+                str(p.valuation_local_currency), p.currency_code,
+                str(p.valuation_eur) if p.valuation_eur is not None else None,
+                str(p.fx_rate_to_eur) if p.fx_rate_to_eur is not None else None,
+                p.fx_source, str(p.ownership_share_percent), p.reporting_date.isoformat(),
+                p.evidence_reference, p.document_hash, p.storage_key, actor, created_at,
+            ),
+        )
+        db.commit()
+    _audit(actor, "fortuna.international_property.submit",
+           f"z1://fortuna/international-properties/{record_id}", "accepted")
+    return InternationalPropertyResponse(
+        id=record_id, record_status="SUBMITTED", created_by=actor,
+        created_at=created_at, **p.model_dump()
+    )
+
+
+@app.get(
+    "/v1/fortuna/international-properties",
+    response_model=list[InternationalPropertyResponse],
+)
+def list_international_properties(
+    actor: str = Depends(require_auth),
+) -> list[InternationalPropertyResponse]:
+    with closing(_connect()) as db:
+        rows = db.execute(
+            "SELECT * FROM z1_fortuna_international_properties ORDER BY reporting_date DESC, created_at DESC"
+        ).fetchall()
+    _audit(actor, "fortuna.international_property.list",
+           "z1://fortuna/international-properties", "accepted")
+    return [InternationalPropertyResponse(**dict(row)) for row in rows]
+
+
+@app.post(
+    "/v1/fortuna/ppt-midas-entries",
+    response_model=PPTMidasEntryResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_ppt_midas_entry(
+    payload: PPTMidasEntryCreate,
+    actor: str = Depends(require_auth),
+) -> PPTMidasEntryResponse:
+    """Record a submitted dated balance; verification remains a separate process."""
+    record_id = str(uuid.uuid4())
+    created_at = datetime.now(timezone.utc).isoformat()
+    p = payload
+    with closing(_connect()) as db:
+        db.execute(
+            """INSERT INTO z1_fortuna_ppt_midas_entries
+               (id, custody_type, custody_reference, public_wallet_address, asset_class,
+                chain_id, reporting_date, balance_nominal, currency_code, q1_return_nominal,
+                q1_period_start, q1_period_end, evidence_reference, document_hash, storage_key,
+                transaction_reference, verification_status, audit_notes, created_by, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SUBMITTED', ?, ?, ?)""",
+            (
+                record_id, p.custody_type, p.custody_reference, p.public_wallet_address,
+                p.asset_class, p.chain_id, p.reporting_date.isoformat(), str(p.balance_nominal),
+                p.currency_code,
+                str(p.q1_return_nominal) if p.q1_return_nominal is not None else None,
+                p.q1_period_start.isoformat() if p.q1_period_start else None,
+                p.q1_period_end.isoformat() if p.q1_period_end else None,
+                p.evidence_reference, p.document_hash, p.storage_key, p.transaction_reference,
+                p.audit_notes, actor, created_at,
+            ),
+        )
+        db.commit()
+    _audit(actor, "fortuna.ppt_midas.submit",
+           f"z1://fortuna/ppt-midas-entries/{record_id}", "accepted")
+    return PPTMidasEntryResponse(
+        id=record_id, verification_status="SUBMITTED", created_by=actor,
+        created_at=created_at, **p.model_dump()
+    )
+
+
+@app.get(
+    "/v1/fortuna/ppt-midas-entries",
+    response_model=list[PPTMidasEntryResponse],
+)
+def list_ppt_midas_entries(
+    actor: str = Depends(require_auth),
+) -> list[PPTMidasEntryResponse]:
+    with closing(_connect()) as db:
+        rows = db.execute(
+            "SELECT * FROM z1_fortuna_ppt_midas_entries ORDER BY reporting_date DESC, created_at DESC"
+        ).fetchall()
+    _audit(actor, "fortuna.ppt_midas.list",
+           "z1://fortuna/ppt-midas-entries", "accepted")
+    return [PPTMidasEntryResponse(**dict(row)) for row in rows]
