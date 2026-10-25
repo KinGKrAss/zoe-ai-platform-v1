@@ -79,10 +79,15 @@ class PPTMidasEntryCreate(BaseModel):
     )
     public_wallet_address: str | None = Field(default=None, max_length=255)
     asset_class: AssetClass
+    asset_symbol: str = Field(min_length=1, max_length=100)
+    quantity_nominal: Decimal | None = Field(default=None, ge=0, max_digits=32, decimal_places=12)
     chain_id: str | None = Field(default=None, max_length=120)
     reporting_date: date
     balance_nominal: Decimal = Field(ge=0, max_digits=32, decimal_places=12)
     currency_code: str = Field(pattern=r"^[A-Za-z]{3}$")
+    valuation_eur: Decimal | None = Field(default=None, ge=0, max_digits=32, decimal_places=12)
+    fx_rate_to_eur: Decimal | None = Field(default=None, gt=0, max_digits=28, decimal_places=12)
+    fx_source: str | None = Field(default=None, max_length=255)
     q1_return_nominal: Decimal | None = Field(default=None, max_digits=32, decimal_places=12)
     q1_period_start: date | None = None
     q1_period_end: date | None = None
@@ -101,6 +106,18 @@ class PPTMidasEntryCreate(BaseModel):
     def validate_custody_and_period(self) -> "PPTMidasEntryCreate":
         if self.custody_type == "onchain_wallet" and not (self.chain_id and self.public_wallet_address):
             raise ValueError("On-chain entries require chain_id and public_wallet_address")
+        if self.asset_class in ("crypto_asset", "token") and self.quantity_nominal is None:
+            raise ValueError("Crypto and token entries require quantity_nominal")
+        if self.valuation_eur is None:
+            if self.fx_rate_to_eur is not None or self.fx_source is not None:
+                raise ValueError("FX rate and source require valuation_eur")
+        elif self.currency_code == "EUR":
+            if self.valuation_eur != self.balance_nominal:
+                raise ValueError("EUR valuation must equal balance_nominal")
+            if self.fx_rate_to_eur is not None or self.fx_source is not None:
+                raise ValueError("FX fields are not used for EUR valuations")
+        elif self.fx_rate_to_eur is None or not self.fx_source:
+            raise ValueError("Non-EUR valuation_eur requires an FX rate and source")
         q1_values = (self.q1_return_nominal, self.q1_period_start, self.q1_period_end)
         if any(value is not None for value in q1_values) and not all(
             value is not None for value in q1_values
