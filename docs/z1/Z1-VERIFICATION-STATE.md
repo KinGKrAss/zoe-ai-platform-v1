@@ -47,3 +47,9 @@ Proof submissions stay `SUBMITTED`; submitting a claim or an observation cannot 
 ## UI contract
 
 The Command Center must read `derived_status` from `z1_verification_state`. It must not maintain a second status truth in frontend state.
+
+## International FORTUNA records
+
+International properties and PPT/MIDAS custody balances are stored by country or custody reference, legal entity, reporting date, and currency. A Q1 aggregate from a presentation is not split into per-property or per-custodian entries without source records.
+
+Submission creates a `SUBMITTED` entry. The submitter cannot set `VERIFIED`. A document hash supports later byte-integrity comparison but does not prove ownership or a financial balance. FX-converted property values require a rate and named source. Full bank account identifiers and credentials are not accepted as custody references.
