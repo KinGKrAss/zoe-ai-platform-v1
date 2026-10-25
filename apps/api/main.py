@@ -185,8 +185,8 @@ def _init_db() -> None:
                 created_by TEXT NOT NULL,
                 verified_by TEXT,
                 verified_at TEXT,
-
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                CHECK (record_status <> 'VERIFIED' OR (verified_by IS NOT NULL AND verified_at IS NOT NULL))
             );
             CREATE TABLE IF NOT EXISTS z1_fortuna_ppt_midas_entries (
                 id TEXT PRIMARY KEY,
@@ -219,8 +219,8 @@ def _init_db() -> None:
                 created_by TEXT NOT NULL,
                 verified_by TEXT,
                 verified_at TEXT,
-
-                created_at TEXT NOT NULL
+                created_at TEXT NOT NULL,
+                CHECK (verification_status <> 'VERIFIED' OR (verified_by IS NOT NULL AND verified_at IS NOT NULL))
             );
             CREATE INDEX IF NOT EXISTS idx_fortuna_int_property_country_date
                 ON z1_fortuna_international_properties(country_code, reporting_date DESC);
