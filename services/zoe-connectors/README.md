@@ -26,4 +26,6 @@ WRITE   → create or modify records (with audit log)
 ADMIN   → destructive actions (with explicit confirmation + audit log)
 ```
 
+The OpenAI adapter itself does not implement user authentication, permission checks, or audit persistence. Call it only from trusted server code after the Z1 caller's access and context have been checked. Add request and result metadata to the Z1 audit trail at that boundary without logging secrets or private prompt text.
+
 See: [Architecture Blueprint – Integration Layer](../../docs/architecture/ZOE-BLUEPRINT-V1.0.md#5-z1-integration-layer-zoe-connectors)
