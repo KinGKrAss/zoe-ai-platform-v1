@@ -36,7 +36,7 @@ class InternationalPropertyCreate(BaseModel):
     document_hash: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
     storage_key: str | None = Field(default=None, pattern=r"^[A-Za-z0-9_-]{1,128}$")
 
-    @field_validator("country_code", "currency_code")
+    @field_validator("country_code", "currency_code", mode="before")
     @classmethod
     def normalize_codes(cls, value: str) -> str:
         return value.upper()
@@ -89,7 +89,7 @@ class PPTMidasEntryCreate(BaseModel):
     transaction_reference: str | None = Field(default=None, max_length=255)
     audit_notes: str | None = Field(default=None, max_length=2000)
 
-    @field_validator("currency_code")
+    @field_validator("currency_code", mode="before")
     @classmethod
     def normalize_currency_code(cls, value: str) -> str:
         return value.upper()
