@@ -89,7 +89,7 @@ class ExtractionEngineV2:
                     content=content,
                     candidate_type="reconstruction",
                     source_references=sources,
-                    dedupe_key=sha256_key(content),
+                    dedupe_key=sha256_key(f"reconstruction:{content}"),
                     extraction_version=self.version,
                     metadata={"synthesis_message_id": message.message_id},
                 ))
@@ -104,12 +104,14 @@ class ExtractionEngineV2:
     def deduplicate(self, candidates: list[MemoryCandidate]) -> list[MemoryCandidate]:
         exact: dict[str, MemoryCandidate] = {}
         for candidate in candidates:
-            exact.setdefault(candidate.dedupe_key, candidate)
+            exact.setdefault((candidate.candidate_type, candidate.dedupe_key), candidate)
 
         result: list[MemoryCandidate] = []
         for candidate in exact.values():
             duplicate = False
             for existing in result:
+                if existing.candidate_type != candidate.candidate_type:
+                    continue
                 same_thread = bool({s.conversation_id for s in candidate.source_references}
                                     & {s.conversation_id for s in existing.source_references})
                 if same_thread and SequenceMatcher(None, normalize(candidate.content), normalize(existing.content)).ratio() >= self.similarity_threshold:
