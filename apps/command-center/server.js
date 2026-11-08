@@ -89,7 +89,7 @@ app.get('/api/system/status', async (_req, res) => {
   res.json(await getSystemState());
 });
 
-app.get('*', (_req, res) => {
+app.get(/.*/, (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

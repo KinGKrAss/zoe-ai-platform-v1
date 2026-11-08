@@ -1,6 +1,6 @@
 import unittest
 
-from z1_uri import Z1URIError, parse_z1_uri, resolve_z1_reference
+from .z1_uri import Z1URIError, parse_z1_uri, resolve_z1_reference
 
 
 class Z1URITests(unittest.TestCase):

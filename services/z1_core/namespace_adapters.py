@@ -12,7 +12,7 @@ from .z1_resolver import Z1Resource
 
 def _resource(uri, resource_type: str, resource_id: str) -> Z1Resource:
     return Z1Resource(
-        uri=uri.canonical,
+        uri=uri.canonical().uri,
         namespace=uri.namespace,
         resource_type=resource_type,
         resource_id=resource_id,

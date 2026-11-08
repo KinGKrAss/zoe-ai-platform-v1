@@ -1,4 +1,4 @@
-"""Expose the hyphenated ``services/z1-core`` directory as ``services.z1_core``."""
+"""Expose the Z1 core directory as ``services.z1_core`` for pytest."""
 
 import importlib.util
 import sys
@@ -6,7 +6,9 @@ import types
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent
-_Z1_CORE = _ROOT / "services" / "z1-core"
+_Z1_CORE = _ROOT / "services" / "z1_core"
+if not _Z1_CORE.is_dir():
+    _Z1_CORE = _ROOT / "services" / "z1-core"
 
 
 def _register_z1_core() -> None:

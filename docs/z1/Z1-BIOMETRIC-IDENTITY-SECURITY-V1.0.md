@@ -53,7 +53,7 @@ Do **not** store the biometric template, raw image, raw audio, fingerprint image
 
 ## Current implementation
 
-`services/z1-core/biometric_security.py` provides:
+`services/z1_core/biometric_security.py` provides:
 
 - modality and purpose enums
 - explicit biometric policy
