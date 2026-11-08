@@ -38,7 +38,7 @@ exclude = ["database*", "integrations*", "infrastructure*"]
 minversion = "8.0"
 testpaths = ["apps", "services"]
 python_files = ["test_*.py", "*_test.py"]
-addopts = "-ra --strict-config"
+addopts = "-ra --strict-config --import-mode=importlib"
 
 [tool.ruff]
 line-length = 100
