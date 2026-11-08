@@ -41,6 +41,10 @@ class Z1URI:
     def uri(self) -> str:
         return urlunsplit((self.scheme, self.namespace, self.path, self.query, self.fragment))
 
+    @property
+    def path_segments(self) -> tuple[str, ...]:
+        return tuple(segment for segment in self.path.split("/") if segment)
+
     def canonical(self) -> "Z1URI":
         return parse_z1_uri(self.uri)
 
@@ -115,8 +119,12 @@ def resolve_z1_reference(reference: str, base: str) -> Z1URI:
     if not reference:
         return base_uri
 
-    # urljoin applies the generic RFC 3986 reference resolution algorithm.
-    resolved = urljoin(base_uri.uri, reference)
+    # urljoin treats unknown schemes as opaque, so use a hierarchical scheme
+    # while applying RFC 3986 reference resolution.
+    hierarchical_base = base_uri.uri.replace("z1://", "https://", 1)
+    resolved = urljoin(hierarchical_base, reference)
+    if resolved.startswith("https://"):
+        resolved = "z1://" + resolved[len("https://"):]
     return parse_z1_uri(resolved)
 
 
