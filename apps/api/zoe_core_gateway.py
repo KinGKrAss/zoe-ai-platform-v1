@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import hashlib
-import hmac
 import json
 import os
 import sqlite3
@@ -14,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import jwt
-from fastapi import Depends, FastAPI, Header, HTTPException, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import Depends, FastAPI, HTTPException, Query, WebSocket, WebSocketDisconnect, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
