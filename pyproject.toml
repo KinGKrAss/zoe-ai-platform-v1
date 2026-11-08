@@ -21,6 +21,8 @@ test = [
   "pytest>=8.3,<9",
   "httpx>=0.28,<1",
   "pytest-cov>=5,<7",
+  "cryptography>=43,<45",
+  "PyYAML>=6,<7",
 ]
 dev = [
   "ruff>=0.12,<1",
