@@ -131,7 +131,7 @@ def resolve_z1_reference(reference: str, base: str) -> Z1URI:
         query = ref.query
     elif not ref.path:
         path = base_uri.path
-        query = ref.query or base_uri.query
+        query = ref.query if "?" in reference.partition("#")[0] else base_uri.query
     else:
         merged = base_uri.path.rsplit("/", 1)[0] + "/" + ref.path
         path = merged
