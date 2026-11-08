@@ -28,6 +28,27 @@ class Z1URITests(unittest.TestCase):
             "z1://documents/contracts/2026/2025/002",
         )
 
+    def test_empty_reference_removes_base_fragment(self):
+        base = "z1://documents/contracts/2026/001?old=1#existing"
+        self.assertEqual(
+            resolve_z1_reference("", base).uri,
+            "z1://documents/contracts/2026/001?old=1",
+        )
+
+    def test_empty_query_reference_removes_base_query(self):
+        base = "z1://documents/contracts/2026/001?old=1#existing"
+        self.assertEqual(
+            resolve_z1_reference("?", base).uri,
+            "z1://documents/contracts/2026/001",
+        )
+
+    def test_fragment_only_reference_inherits_base_query(self):
+        base = "z1://documents/contracts/2026/001?old=1#existing"
+        self.assertEqual(
+            resolve_z1_reference("#new", base).uri,
+            "z1://documents/contracts/2026/001?old=1#new",
+        )
+
     def test_invalid_scheme(self):
         with self.assertRaises(Z1URIError):
             parse_z1_uri("https://example.com/resource")

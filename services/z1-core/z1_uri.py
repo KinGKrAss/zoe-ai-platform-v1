@@ -117,9 +117,6 @@ def parse_z1_uri(value: str) -> Z1URI:
 def resolve_z1_reference(reference: str, base: str) -> Z1URI:
     """Resolve a Z1 relative reference using RFC 3986 reference semantics."""
     base_uri = parse_z1_uri(base)
-    if not reference:
-        return base_uri
-
     # urljoin does not resolve relative references for unregistered schemes.
     ref = urlsplit(reference)
     if ref.scheme:
@@ -131,7 +128,8 @@ def resolve_z1_reference(reference: str, base: str) -> Z1URI:
         query = ref.query
     elif not ref.path:
         path = base_uri.path
-        query = ref.query or base_uri.query
+        has_query = "?" in reference.partition("#")[0]
+        query = ref.query if has_query else base_uri.query
     else:
         merged = base_uri.path.rsplit("/", 1)[0] + "/" + ref.path
         path = merged
