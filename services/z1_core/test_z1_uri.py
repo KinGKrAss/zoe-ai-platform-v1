@@ -28,6 +28,16 @@ class Z1URITests(unittest.TestCase):
             "z1://documents/contracts/2026/2025/002",
         )
 
+    def test_empty_query_replaces_base_query(self):
+        base = "z1://documents/contracts/2026/001?version=1"
+        resolved = resolve_z1_reference("?", base)
+        self.assertEqual(resolved.uri, "z1://documents/contracts/2026/001")
+
+    def test_fragment_only_reference_preserves_base_query(self):
+        base = "z1://documents/contracts/2026/001?version=1"
+        resolved = resolve_z1_reference("#section", base)
+        self.assertEqual(resolved.uri, "z1://documents/contracts/2026/001?version=1#section")
+
     def test_invalid_scheme(self):
         with self.assertRaises(Z1URIError):
             parse_z1_uri("https://example.com/resource")

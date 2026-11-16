@@ -123,6 +123,14 @@ def resolve_z1_reference(reference: str, base: str) -> Z1URI:
     # while applying RFC 3986 reference resolution.
     hierarchical_base = base_uri.uri.replace("z1://", "https://", 1)
     resolved = urljoin(hierarchical_base, reference)
+    reference_parts = urlsplit(reference)
+    if (
+        not reference_parts.path
+        and "?" in reference.partition("#")[0]
+        and not reference_parts.query
+    ):
+        resolved_parts = urlsplit(resolved)
+        resolved = urlunsplit(resolved_parts._replace(query=""))
     if resolved.startswith("https://"):
         resolved = "z1://" + resolved[len("https://"):]
     return parse_z1_uri(resolved)
