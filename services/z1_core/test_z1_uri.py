@@ -1,6 +1,6 @@
 import unittest
 
-from z1_uri import Z1URIError, parse_z1_uri, resolve_z1_reference
+from .z1_uri import Z1URIError, parse_z1_uri, resolve_z1_reference
 
 
 class Z1URITests(unittest.TestCase):
@@ -48,6 +48,16 @@ class Z1URITests(unittest.TestCase):
             resolve_z1_reference("#new", base).uri,
             "z1://documents/contracts/2026/001?old=1#new",
         )
+
+    def test_empty_query_replaces_base_query(self):
+        base = "z1://documents/contracts/2026/001?version=1"
+        resolved = resolve_z1_reference("?", base)
+        self.assertEqual(resolved.uri, "z1://documents/contracts/2026/001")
+
+    def test_fragment_only_reference_preserves_base_query(self):
+        base = "z1://documents/contracts/2026/001?version=1"
+        resolved = resolve_z1_reference("#section", base)
+        self.assertEqual(resolved.uri, "z1://documents/contracts/2026/001?version=1#section")
 
     def test_invalid_scheme(self):
         with self.assertRaises(Z1URIError):

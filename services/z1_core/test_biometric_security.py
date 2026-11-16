@@ -1,4 +1,4 @@
-from biometric_security import (
+from .biometric_security import (
     BiometricDecision,
     BiometricModality,
     BiometricPolicy,

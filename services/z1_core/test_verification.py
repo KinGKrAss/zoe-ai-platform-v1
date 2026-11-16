@@ -1,4 +1,4 @@
-from verification import CheckStatus, VerificationCheck, VerificationState, derive_verification_state
+from .verification import CheckStatus, VerificationCheck, VerificationState, derive_verification_state
 
 
 def test_all_required_checks_pass_is_verified():
