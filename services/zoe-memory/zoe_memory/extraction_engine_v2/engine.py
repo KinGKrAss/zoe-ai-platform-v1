@@ -110,7 +110,7 @@ class ExtractionEngineV2:
         for candidate in exact.values():
             duplicate = False
             for existing in result:
-                if candidate.candidate_type != existing.candidate_type:
+                if existing.candidate_type != candidate.candidate_type:
                     continue
                 same_thread = bool({s.conversation_id for s in candidate.source_references}
                                     & {s.conversation_id for s in existing.source_references})

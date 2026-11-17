@@ -8,7 +8,7 @@ Z1-specific scheme/namespace contract.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from urllib.parse import urljoin, urlsplit, urlunsplit
+from urllib.parse import urlsplit, urlunsplit
 
 
 class Z1URIError(ValueError):
@@ -42,11 +42,12 @@ class Z1URI:
         return urlunsplit((self.scheme, self.namespace, self.path, self.query, self.fragment))
 
     @property
+    def canonical(self) -> str:
+        return parse_z1_uri(self.uri).uri
+
+    @property
     def path_segments(self) -> tuple[str, ...]:
         return tuple(segment for segment in self.path.split("/") if segment)
-
-    def canonical(self) -> "Z1URI":
-        return parse_z1_uri(self.uri)
 
 
 
@@ -116,24 +117,24 @@ def parse_z1_uri(value: str) -> Z1URI:
 def resolve_z1_reference(reference: str, base: str) -> Z1URI:
     """Resolve a Z1 relative reference using RFC 3986 reference semantics."""
     base_uri = parse_z1_uri(base)
-    if not reference:
-        return base_uri
-
-    # urljoin treats unknown schemes as opaque, so use a hierarchical scheme
-    # while applying RFC 3986 reference resolution.
-    hierarchical_base = base_uri.uri.replace("z1://", "https://", 1)
-    resolved = urljoin(hierarchical_base, reference)
-    reference_parts = urlsplit(reference)
-    if (
-        not reference_parts.path
-        and "?" in reference.partition("#")[0]
-        and not reference_parts.query
-    ):
-        resolved_parts = urlsplit(resolved)
-        resolved = urlunsplit(resolved_parts._replace(query=""))
-    if resolved.startswith("https://"):
-        resolved = "z1://" + resolved[len("https://"):]
-    return parse_z1_uri(resolved)
+    # urljoin does not resolve relative references for unregistered schemes.
+    ref = urlsplit(reference)
+    if ref.scheme:
+        return parse_z1_uri(reference)
+    if ref.netloc:
+        return parse_z1_uri(f"z1:{reference}")
+    if ref.path.startswith("/"):
+        path = ref.path
+        query = ref.query
+    elif not ref.path:
+        path = base_uri.path
+        has_query = "?" in reference.partition("#")[0]
+        query = ref.query if has_query else base_uri.query
+    else:
+        merged = base_uri.path.rsplit("/", 1)[0] + "/" + ref.path
+        path = merged
+        query = ref.query
+    return parse_z1_uri(urlunsplit(("z1", base_uri.namespace, path, query, ref.fragment)))
 
 
 class Z1Resolver:

@@ -36,7 +36,7 @@ class Z1Identity:
         if not resource_type.strip():
             raise ValueError("Z1 resource type must not be empty")
         return cls(
-            uri=parsed.canonical().uri,
+            uri=parsed.canonical,
             resource_type=resource_type.strip(),
             owner=owner.strip(),
             version=version.strip() or "1",
